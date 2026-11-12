@@ -28,4 +28,5 @@ jobs:
             -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log
       - name: エラーだけ抜き出す
         if: failure()
-        run: grep -E "error:|warning: .*(will be an error|is unavailable)" build.log | sort -u | head -100
+        run: |
+          grep -E "error:|warning: .*(will be an error|is unavailable)" build.log | sort -u | head -100
