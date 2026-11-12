@@ -1,0 +1,31 @@
+# Mac 上で自動ビルド：ルールのテスト（swift test）と、iOS シミュレーター向けのアプリのビルド
+name: iOS build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  core-tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: ルールのテスト
+        working-directory: NyansoroCore
+        run: swift test
+
+  ios-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode のバージョン
+        run: xcodebuild -version
+      - name: シミュレーター向けにビルド
+        run: |
+          set -o pipefail
+          xcodebuild -project Nyansoro.xcodeproj -target Nyansoro -sdk iphonesimulator \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log
+      - name: エラーだけ抜き出す
+        if: failure()
+        run: grep -E "error:|warning: .*(will be an error|is unavailable)" build.log | sort -u | head -100
