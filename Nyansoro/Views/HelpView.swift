@@ -169,7 +169,7 @@ struct HelpView: View {
             markRow({ Capsule().fill(Palette.ok).frame(width: 60, height: 5) }, "緑《みどり》の線《せん》：揃《そろ》ったセット。")
             markRow({
                 DashLine()
-                    .stroke(Palette.lineStrong, style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [5, 6]))
+                    .stroke(Palette.inkSoft.opacity(0.55), style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
                     .frame(width: 60, height: 5)
             }, "点線《てんせん》：あと少《すこ》しで揃《そろ》うセット。")
             markRow({ StatusPill(dist: 1, win: false) }, "あと何枚《なんまい》で揃《そろ》うか。「待《ま》っている猫《ねこ》」が出《で》たら勝《か》ち。")
@@ -259,7 +259,7 @@ private struct NowPage: View {
                         if g.complete {
                             Capsule().fill(Palette.ok).frame(height: 5)
                         } else {
-                            DashLine().stroke(Palette.lineStrong, style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [5, 6])).frame(height: 5)
+                            DashLine().stroke(Palette.inkSoft.opacity(0.55), style: StrokeStyle(lineWidth: 3, dash: [6, 4])).frame(height: 5)
                         }
                     }
                     .padding(.trailing, 10)

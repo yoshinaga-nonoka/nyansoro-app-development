@@ -8,10 +8,10 @@ struct Stamp: View {
 
     var body: some View {
         Text(text)
-            .font(AppFont.display(32))
+            .font(AppFont.display(26))
             .foregroundColor(Palette.onPink)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 2)
             .background(Capsule().fill(Palette.pink))
             .background(Capsule().fill(Palette.pinkPress).offset(y: 5))
             .rotationEffect(.degrees(-5))
@@ -35,7 +35,7 @@ struct DeltaList: View {
                 let p = state.players[i]
                 let d = deltas[i]
                 HStack(spacing: 8) {
-                    Avatar(kind: p.avatar, size: 26)
+                    Avatar(kind: p.avatar, size: 24)
                     RubyText(p.name, size: 14, bold: true)
                     Spacer(minLength: 0)
                     Text(d > 0 ? "+\(d)" : d < 0 ? "\(d)" : "±0")
@@ -46,7 +46,7 @@ struct DeltaList: View {
                         .frame(minWidth: 60, alignment: .trailing)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.vertical, 4)
                 .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(p.isHuman ? Palette.surface : Palette.surface2))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(p.isHuman ? Palette.pink : Palette.line, lineWidth: 2))
             }
@@ -61,7 +61,7 @@ struct RoundResultCard: View {
     let onNext: () -> Void
 
     var body: some View {
-        ModalCard {
+        ModalCard(spacing: 10) {
             if result.kind == .exhausted || result.win == nil || result.winner == nil {
                 ZStack(alignment: .topTrailing) {
                     CatFace(kind: kindOf(2, 2)).frame(width: 84, height: 84)
@@ -75,23 +75,24 @@ struct RoundResultCard: View {
             } else if let win = result.win, let w = result.winner {
                 let winner = state.players[w]
                 Stamp(text: "にゃん！")
-                RubyText(winner.isHuman ? "キミの勝《か》ち！" : "\(winner.name)の上《あ》がり", size: 22, display: true, alignment: .center)
-                RubyText(subtitle, size: 14, alignment: .center)
+                RubyText(winner.isHuman ? "キミの勝《か》ち！" : "\(winner.name)の上《あ》がり", size: 20, display: true, alignment: .center)
+                RubyText(subtitle, size: 13, alignment: .center)
                 FlowLayout(alignment: .center) {
                     ForEach(Array(win.groups.enumerated()), id: \.offset) { item in
                         HStack(spacing: 2) {
                             ForEach(item.element.tiles) { t in
-                                TileView(kind: t.kind, width: 40, highlight: t.id == result.tile?.id)
+                                TileView(kind: t.kind, width: 30, highlight: t.id == result.tile?.id)
                             }
                         }
-                        .padding(.bottom, 9)
+                        .padding(.bottom, 8)
                         .overlay(alignment: .bottom) {
-                            Capsule().fill(Palette.ok).frame(height: 5).padding(.horizontal, 2)
+                            Capsule().fill(Palette.ok).frame(height: 4).padding(.horizontal, 2)
                         }
-                        .padding(6)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 4)
                     }
                 }
-                VStack(spacing: 6) {
+                VStack(spacing: 2) {
                     ForEach(win.items, id: \.self) { item in
                         HStack {
                             RubyText(item.label, size: 14)

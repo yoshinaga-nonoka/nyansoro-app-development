@@ -88,6 +88,7 @@ struct PillButtonStyle: ButtonStyle {
 /// 画面を暗くして、真ん中にカードを出す
 struct ModalCard<Content: View>: View {
     var maxWidth: CGFloat = 520
+    var spacing: CGFloat = 14
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -104,9 +105,9 @@ struct ModalCard<Content: View>: View {
     }
 
     private var card: some View {
-        VStack(spacing: 14) { content() }
+        VStack(spacing: spacing) { content() }
             .padding(.horizontal, 20)
-            .padding(.vertical, 24)
+            .padding(.vertical, spacing + 8)
             .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Palette.surface))
             .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(Palette.line, lineWidth: 2))

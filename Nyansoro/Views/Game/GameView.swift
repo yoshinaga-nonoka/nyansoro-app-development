@@ -12,6 +12,9 @@ struct GameView: View {
         _game = StateObject(wrappedValue: GameController(mode: mode, app: app))
     }
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var wideScreen: Bool { sizeClass == .regular }
+
     var body: some View {
         GeometryReader { geo in
             let width = min(geo.size.width, 920)
@@ -69,7 +72,7 @@ struct GameView: View {
     private func table(width: CGFloat) -> some View {
         let mat = app.settings.mat.style
         let wide = width >= 700
-        let pondTile: CGFloat = width >= 640 ? 28 : 22
+        let pondTile: CGFloat = width >= 700 ? 34 : width >= 640 ? 28 : 22
         let lastId = game.state.lastDiscard?.tile.id
         let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
         return VStack(spacing: 10) {
@@ -148,7 +151,7 @@ struct GameView: View {
         let s = game.state
         if s.phase == .claim, let ld = s.lastDiscard {
             HStack(spacing: 12) {
-                TileView(kind: ld.tile.kind, width: 44, highlight: true)
+                TileView(kind: ld.tile.kind, width: wideScreen ? 58 : 44, highlight: true)
                 VStack(alignment: .leading, spacing: 4) {
                     RubyText("\(s.players[ld.from].name)が「\(kindName(ld.tile.kind))」を捨《す》てた", size: 13, bold: true, color: Palette.matInk)
                     RubyText(game.myClaim ? "揃《そろ》う！ にゃん！で勝《か》ち" : "\(s.players[s.claimQueue.first ?? 0].name)が…！", size: 17, display: true, color: game.myClaim ? Palette.goldInk : Palette.matInk)
@@ -162,7 +165,7 @@ struct GameView: View {
             VStack(spacing: 8) {
                 if let ld = s.lastDiscard {
                     HStack(spacing: 8) {
-                        TileView(kind: ld.tile.kind, width: 40)
+                        TileView(kind: ld.tile.kind, width: wideScreen ? 54 : 40)
                         RubyText("\(s.players[ld.from].name)が捨《す》てた", size: 12, bold: true, color: Palette.matInkSoft)
                     }
                 }
@@ -322,7 +325,7 @@ struct GameView: View {
     }
 
     private func hand(_ d: GameController.Derived, width: CGFloat) -> some View {
-        let tw = max(28, min(64, (width - 32 - 20 - 48) / 9))
+        let tw = max(28, min(width >= 700 ? 84 : 64, (width - 32 - 20 - 48) / 9))
         return HStack(alignment: .bottom, spacing: width >= 640 ? 9 : 5) {
             if let a = d.arrangement {
                 ForEach(Array(a.groups.enumerated()), id: \.offset) { item in
@@ -368,7 +371,7 @@ struct GameView: View {
                 Capsule().fill(Palette.ok).frame(height: 5).padding(.horizontal, 2)
             case .partial:
                 DashLine()
-                    .stroke(Palette.lineStrong, style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [5, 6]))
+                    .stroke(Palette.inkSoft.opacity(0.55), style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
                     .frame(height: 5)
                     .padding(.horizontal, 2)
             case .none:

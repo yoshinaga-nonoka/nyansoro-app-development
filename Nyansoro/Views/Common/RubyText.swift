@@ -95,22 +95,37 @@ struct RubyText: View {
         display ? AppFont.display(s) : AppFont.body(s, bold: strong)
     }
 
-    @ViewBuilder
+    /// 読みが漢字より長いとき、左右に足す余白（読みは両隣に 1/4 文字ずつ はみ出してよい）
+    private func sidePadding(_ t: RubyToken) -> CGFloat {
+        guard furigana, let reading = t.reading else { return 0 }
+        let readingWidth = CGFloat(reading.count) * size * 0.5
+        let baseWidth = CGFloat(t.base.count) * size
+        return max(0, (readingWidth - baseWidth - size * 0.5) / 2)
+    }
+
     private func tokenView(_ t: RubyToken) -> some View {
         VStack(spacing: 0) {
             if furigana {
-                Text(t.reading ?? " ")
+                // 読みの行の高さだけ空けておき、読みは上に重ねる
+                Text(" ")
                     .font(AppFont.body(size * 0.5, bold: true))
-                    .foregroundColor(color)
-                    .opacity(t.reading == nil ? 0 : 0.9)
-                    .lineLimit(1)
-                    .fixedSize()
+                    .hidden()
             }
             Text(t.base)
                 .font(font(size, strong: bold || t.bold))
                 .foregroundColor(color)
                 .lineLimit(1)
                 .fixedSize()
+        }
+        .padding(.horizontal, sidePadding(t))
+        .overlay(alignment: .top) {
+            if furigana, let reading = t.reading {
+                Text(reading)
+                    .font(AppFont.body(size * 0.5, bold: true))
+                    .foregroundColor(color.opacity(0.9))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
         }
     }
 }

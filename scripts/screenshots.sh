@@ -38,7 +38,7 @@ shoot() {
   for sc in "$@"; do
     xcrun simctl terminate "$U" "$BID" > /dev/null 2>&1 || true
     xcrun simctl launch "$U" "$BID" -scenario "$sc" > /dev/null
-    sleep 5
+    sleep 7
     xcrun simctl io "$U" screenshot "shots/$P-$sc.png" > /dev/null 2>&1
     echo "  shots/$P-$sc.png"
   done

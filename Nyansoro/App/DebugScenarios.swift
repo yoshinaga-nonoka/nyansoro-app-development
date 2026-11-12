@@ -34,10 +34,11 @@ enum DemoStates {
                     let p = s.players[s.current]
                     if canWin(p.hand) {
                         a = .tsumo
-                    } else if p.isHuman, let k = recommendDiscard(s, 0), let t = p.hand.last(where: { $0.kind == k }) {
+                    } else if p.isHuman, let best = discardOptions(s, 0).min(by: { $0.dist < $1.dist }), let t = p.hand.last(where: { $0.kind == best.kind }) {
+                        // 起動を速くするため、おすすめ（残り枚数の計算）は使わない
                         a = .discard(tileId: t.id)
                     } else {
-                        a = .discard(tileId: chooseDiscard(s, s.current, level: max(1, p.level), rand: { r.nextUnit() }))
+                        a = .discard(tileId: chooseDiscard(s, s.current, level: 2, rand: { r.nextUnit() }))
                     }
                 case .claim:
                     a = .ron(player: s.claimQueue[0])
