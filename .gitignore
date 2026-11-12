@@ -3,3 +3,7 @@
 DerivedData/
 xcuserdata/
 *.xcuserstate
+shots/
+build/
+build.log
+devices.json

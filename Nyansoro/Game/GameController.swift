@@ -26,11 +26,30 @@ final class GameController: ObservableObject {
         self.mode = mode
         self.app = app
         self.tStep = mode == .tutorial ? 0 : -1
+        #if DEBUG
+        if let demo = app.debugInitialState {
+            app.debugInitialState = nil
+            self.state = demo
+            if app.debugOpenHelp {
+                app.debugOpenHelp = false
+                showHelp = true
+            }
+            if demo.phase == .matchEnd {
+                ended = true
+                reward = app.matchEnded(mode: mode, place: demo.place(of: 0))
+            }
+            return
+        }
+        #endif
         self.state = Self.newGame(mode)
         showBanner()
     }
 
     static func newGame(_ mode: GameMode) -> GameState {
+        makeState(mode: mode, seed: UInt32.random(in: 0...UInt32.max))
+    }
+
+    nonisolated static func makeState(mode: GameMode, seed: UInt32) -> GameState {
         let human = PlayerSetup(name: "キミ", isHuman: true, level: 0, avatar: kindOf(0, 2))
         switch mode {
         case .tutorial:
@@ -39,7 +58,7 @@ final class GameController: ObservableObject {
         case let .cpu(rank):
             let r = Ranks.all[rank]
             let cpus = r.cpus.map { PlayerSetup(name: $0.name, isHuman: false, level: r.level, avatar: $0.avatar) }
-            return GameState(setups: [human] + cpus, rules: Rules(rounds: 4, furikomiPenalty: r.furikomiPenalty), seed: UInt32.random(in: 0...UInt32.max))
+            return GameState(setups: [human] + cpus, rules: Rules(rounds: 4, furikomiPenalty: r.furikomiPenalty), seed: seed)
         }
     }
 

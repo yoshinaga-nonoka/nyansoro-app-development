@@ -42,9 +42,18 @@ final class AppModel: ObservableObject {
         #endif
     }
 
+    #if DEBUG
+    /// 開発用：場面指定（DebugScenarios.swift）で使う、対戦の最初の状態
+    var debugInitialState: GameState?
+    var debugOpenHelp = false
+    #endif
+
     init() {
         save = SaveStore.load()
         applySettings()
+        #if DEBUG
+        if let scenario = DebugScenario.current { applyDebugScenario(scenario) }
+        #endif
     }
 
     var settings: Settings { save.settings }

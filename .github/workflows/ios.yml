@@ -1,4 +1,4 @@
-# Mac 上で自動ビルド：ルールのテスト（swift test）と、iOS シミュレーター向けのアプリのビルド
+# Mac 上で自動ビルド：ルールのテスト、iOS アプリのビルド、シミュレーターでの画面の撮影
 name: iOS build
 
 on:
@@ -10,7 +10,7 @@ jobs:
   core-tests:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: ルールのテスト
         working-directory: NyansoroCore
         run: swift test
@@ -18,7 +18,7 @@ jobs:
   ios-build:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Xcode のバージョン
         run: xcodebuild -version
       - name: シミュレーター向けにビルド
@@ -30,3 +30,18 @@ jobs:
         if: failure()
         run: |
           grep -E "error:|warning: .*(will be an error|is unavailable)" build.log | sort -u | head -100
+
+  screenshots:
+    runs-on: macos-15
+    needs: ios-build
+    steps:
+      - uses: actions/checkout@v5
+      - name: シミュレーターで画面を撮る
+        run: scripts/screenshots.sh
+      - name: 画面をダウンロードできるようにする
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots/
+          if-no-files-found: warn
