@@ -19,6 +19,7 @@ enum DebugScenario: String, CaseIterable {
 }
 
 enum DemoStates {
+    /// 起動を速くするため、場面ごとに当たりの種を決めてある（変えたら seeds を探し直す）
     /// 決まった種で CPU対戦を始め、自分はおすすめを捨てながら、stop が true になるまで進める
     static func play(rank: Int = 0, seeds: ClosedRange<UInt32> = 1...200, until stop: (GameState) -> Bool) -> GameState? {
         for seed in seeds {
@@ -81,16 +82,16 @@ extension AppModel {
             startGame(DemoStates.play { $0.phase == .discard && $0.current == 0 && $0.players.reduce(0) { $0 + $1.discards.count } >= 8 })
         case .claim:
             save.settings.autoNyan = false
-            startGame(DemoStates.play { $0.phase == .claim && $0.claimQueue.first == 0 })
+            startGame(DemoStates.play(seeds: 3...3) { $0.phase == .claim && $0.claimQueue.first == 0 })
         case .roundResult:
-            startGame(DemoStates.play { $0.phase == .roundEnd && $0.result?.winner == 0 })
+            startGame(DemoStates.play(seeds: 3...3) { $0.phase == .roundEnd && $0.result?.winner == 0 })
         case .matchResult:
             save.ads.matchesFinished = 3
-            startGame(DemoStates.play { $0.phase == .matchEnd && $0.place(of: 0) == 1 })
+            startGame(DemoStates.play(seeds: 3...3) { $0.phase == .matchEnd && $0.place(of: 0) == 1 })
         case .rankup:
             save.progress.rank = 0
             save.progress.stars = 2
-            startGame(DemoStates.play { $0.phase == .matchEnd && $0.place(of: 0) == 0 })
+            startGame(DemoStates.play(seeds: 10...10) { $0.phase == .matchEnd && $0.place(of: 0) == 0 })
         }
     }
 }
