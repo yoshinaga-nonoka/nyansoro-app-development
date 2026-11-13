@@ -205,3 +205,78 @@ final class AdPolicyTests: XCTestCase {
         XCTAssertTrue(a.canOfferReward(now: Date().addingTimeInterval(86_400 * 2)))
     }
 }
+
+final class DailyTests: XCTestCase {
+    private let human = PlayerSetup(name: "キミ", isHuman: true, level: 0, avatar: 2)
+
+    func testSameDaySameDeal() {
+        let a = Daily.makeState(day: 9_800, human: human)
+        let b = Daily.makeState(day: 9_800, human: human)
+        let c = Daily.makeState(day: 9_801, human: human)
+        XCTAssertEqual(a.wall.map(\.id), b.wall.map(\.id))
+        XCTAssertEqual(a.players[0].hand, b.players[0].hand)
+        XCTAssertNotEqual(a.wall.map(\.id), c.wall.map(\.id))
+        XCTAssertEqual(a.rules.rounds, 1)
+    }
+
+    func testDayNumberIsConsecutive() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let d1 = cal.date(from: DateComponents(year: 2026, month: 11, day: 13, hour: 23, minute: 59))!
+        let d2 = cal.date(from: DateComponents(year: 2026, month: 11, day: 14, hour: 0, minute: 1))!
+        XCTAssertEqual(Daily.dayNumber(d2, calendar: cal) - Daily.dayNumber(d1, calendar: cal), 1)
+    }
+
+    func testStreak() {
+        var s = StreakState()
+        XCTAssertEqual(s.status(today: 100), .notStarted)
+        s.complete(today: 100)
+        XCTAssertEqual(s.current, 1)
+        s.complete(today: 100)
+        XCTAssertEqual(s.current, 1, "same day twice does not count")
+        s.complete(today: 101)
+        XCTAssertEqual(s.current, 2)
+        XCTAssertEqual(s.status(today: 102), .keepGoing)
+        XCTAssertEqual(s.status(today: 103), .revivable)
+        XCTAssertEqual(s.displayCount(today: 103), 2)
+        XCTAssertTrue(s.revive(today: 103))
+        s.complete(today: 103)
+        XCTAssertEqual(s.current, 3, "revived streak continues")
+        XCTAssertEqual(s.status(today: 106), .broken)
+        XCTAssertEqual(s.displayCount(today: 106), 0)
+        XCTAssertFalse(s.revive(today: 106))
+        s.complete(today: 106)
+        XCTAssertEqual(s.current, 1)
+        XCTAssertEqual(s.best, 3)
+    }
+}
+
+final class FeedbackTests: XCTestCase {
+    private func setups() -> [PlayerSetup] {
+        (0..<4).map { PlayerSetup(name: "p\($0)", isHuman: $0 == 0, level: 1, avatar: 0) }
+    }
+
+    func testNearMissWhenSomeoneElseWins() {
+        var s = GameState(setups: setups(), rules: Rules(rounds: 1, furikomiPenalty: 0), seed: 5)
+        var id = 5000
+        func t(_ k: Int) -> Tile { id += 1; return Tile(id: id, kind: k) }
+        s.players[0].hand = [0, 0, 0, 3, 4, 5, 8, 8].map(t)          // あと1枚（白の子猫待ち）
+        s.players[1].hand = [9, 9, 9, 12, 12, 12, 15, 15, 15].map(t)
+        s.current = 1
+        s.phase = .discard
+        XCTAssertTrue(s.apply(.tsumo))
+        XCTAssertEqual(Feedback.roundMessage(s), "惜《お》しい！ あと1枚《まい》だった！")
+    }
+
+    func testPraiseWhenIWin() {
+        var s = GameState(setups: setups(), rules: Rules(rounds: 1, furikomiPenalty: 0), seed: 5)
+        var id = 6000
+        func t(_ k: Int) -> Tile { id += 1; return Tile(id: id, kind: k) }
+        s.players[0].hand = [0, 0, 0, 3, 3, 3, 6, 6, 6].map(t)
+        s.phase = .discard
+        s.current = 0
+        XCTAssertTrue(s.apply(.tsumo))
+        XCTAssertEqual(Feedback.roundMessage(s), "全部《ぜんぶ》同《おな》じ猫《ねこ》！ お見事《みごと》！")
+        XCTAssertEqual(Feedback.winTurns(s, seat: 0), 1)
+    }
+}

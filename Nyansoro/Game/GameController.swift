@@ -20,12 +20,14 @@ final class GameController: ObservableObject {
     private var task: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
     private var scriptDone = false
+    private var cpuRandom: Mulberry32?
     private var ended = false
 
     init(mode: GameMode, app: AppModel) {
         self.mode = mode
         self.app = app
         self.tStep = mode == .tutorial ? 0 : -1
+        if case let .daily(day) = mode { cpuRandom = Daily.cpuRandom(day: day) }
         #if DEBUG
         if let demo = app.debugInitialState {
             app.debugInitialState = nil
@@ -36,7 +38,7 @@ final class GameController: ObservableObject {
             }
             if demo.phase == .matchEnd {
                 ended = true
-                reward = app.matchEnded(mode: mode, place: demo.place(of: 0))
+                reward = app.matchEnded(mode: mode, state: demo)
             }
             return
         }
@@ -52,6 +54,8 @@ final class GameController: ObservableObject {
     nonisolated static func makeState(mode: GameMode, seed: UInt32) -> GameState {
         let human = PlayerSetup(name: "キミ", isHuman: true, level: 0, avatar: kindOf(0, 2))
         switch mode {
+        case let .daily(day):
+            return Daily.makeState(day: day, human: human)
         case .tutorial:
             let cpus = Ranks.all[0].cpus.map { PlayerSetup(name: $0.name, isHuman: false, level: 1, avatar: $0.avatar) }
             return GameState(setups: [human] + cpus, rules: Rules(rounds: 1, furikomiPenalty: 0), seed: 1, presetDeck: Tutorial.deck())
@@ -65,6 +69,14 @@ final class GameController: ObservableObject {
     // MARK: 表示用
 
     var tutorial: Bool { mode == .tutorial }
+    var isDaily: Bool {
+        if case .daily = mode { return true }
+        return false
+    }
+    var titleText: String {
+        if isDaily { return "今日《きょう》の1局《きょく》" }
+        return tutorial ? "練習《れんしゅう》" : "\(rankDef?.name ?? "")ランク"
+    }
     var rankDef: RankDef? {
         if case let .cpu(rank) = mode { return Ranks.all[rank] }
         return nil
@@ -147,7 +159,7 @@ final class GameController: ObservableObject {
         }
         if state.phase == .matchEnd, !ended {
             ended = true
-            reward = app.matchEnded(mode: mode, place: state.place(of: 0))
+            reward = app.matchEnded(mode: mode, state: state)
             SoundPlayer.shared.fanfare()
         }
         schedule()
@@ -187,7 +199,11 @@ final class GameController: ObservableObject {
     }
 
     private func showBanner() {
-        banner = tutorial ? "練習《れんしゅう》" : "\(state.round + 1)局目《きょくめ》"
+        if case .daily = mode {
+            banner = "今日《きょう》の1局《きょく》"
+        } else {
+            banner = tutorial ? "練習《れんしゅう》" : "\(state.round + 1)局目《きょくめ》"
+        }
         bannerTask?.cancel()
         bannerTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 1_300_000_000)
@@ -257,6 +273,13 @@ final class GameController: ObservableObject {
         if tutorial, s.current == 1, !scriptDone, let t = p.hand.first(where: { $0.kind == Tutorial.winKind }) {
             scriptDone = true
             act(.discard(tileId: t.id))
+            return
+        }
+        if var r = cpuRandom {
+            // 今日の1局：CPU の迷い方も日付で決める
+            let id = chooseDiscard(s, s.current, level: p.level, rand: { r.nextUnit() })
+            cpuRandom = r
+            act(.discard(tileId: id))
             return
         }
         act(.discard(tileId: chooseDiscard(s, s.current, level: p.level)))

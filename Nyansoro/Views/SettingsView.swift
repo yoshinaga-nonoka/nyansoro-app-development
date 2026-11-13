@@ -23,6 +23,7 @@ struct SettingsView: View {
                 ToggleRow(title: "ヒント", note: "おすすめマーク・セットの線《せん》・あと何枚《なんまい》", isOn: $app.save.settings.hints)
                 ToggleRow(title: "ふりがな", note: "漢字《かんじ》に読《よ》み方《かた》を付《つ》ける", isOn: $app.save.settings.furigana)
                 ToggleRow(title: "自動《じどう》でにゃん！", note: "揃《そろ》ったら自動《じどう》で上《あ》がる（見逃《みのが》さない）", isOn: $app.save.settings.autoNyan)
+                ToggleRow(title: "毎日《まいにち》のお知《し》らせ", note: "19時《じ》に「今日《きょう》の1局《きょく》」をお知《し》らせ（遊《あそ》んだ日《ひ》は出《で》ない）", isOn: remindersBinding)
                 ToggleRow(title: "音《おと》", note: "効果音《こうかおん》", isOn: $app.save.settings.sound)
                 ToggleRow(title: "振動《しんどう》", note: "タップや上《あ》がりのときに少《すこ》し震《ふる》える", isOn: $app.save.settings.haptics)
 
@@ -61,6 +62,21 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Palette.bg.ignoresSafeArea())
+    }
+
+    /// オンにしたときは通知の許可を聞く
+    private var remindersBinding: Binding<Bool> {
+        Binding(
+            get: { app.save.settings.reminders },
+            set: { on in
+                if on {
+                    app.enableReminders()
+                } else {
+                    app.save.settings.reminders = false
+                    app.refreshReminders()
+                }
+            }
+        )
     }
 
     private func matSwatch(_ m: MatId) -> some View {

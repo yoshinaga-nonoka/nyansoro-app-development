@@ -40,6 +40,8 @@ struct Settings: Codable, Equatable {
     var haptics = true
     var mat: MatId = .ramune
     var furigana = true
+    /// 毎日のお知らせ（今日の1局）
+    var reminders = true
 
     init() {}
 
@@ -54,6 +56,7 @@ struct Settings: Codable, Equatable {
         haptics = try c.decodeIfPresent(Bool.self, forKey: .haptics) ?? d.haptics
         mat = try c.decodeIfPresent(MatId.self, forKey: .mat) ?? d.mat
         furigana = try c.decodeIfPresent(Bool.self, forKey: .furigana) ?? d.furigana
+        reminders = try c.decodeIfPresent(Bool.self, forKey: .reminders) ?? d.reminders
     }
 }
 
@@ -61,6 +64,10 @@ struct SaveData: Codable, Equatable {
     var progress = RankProgress()
     var settings = Settings()
     var ads = AdPolicy()
+    var streak = StreakState()
+    var daily: DailyResult?
+    /// 通知の許可をもう聞いたか
+    var askedReminders = false
 
     init() {}
 
@@ -69,6 +76,9 @@ struct SaveData: Codable, Equatable {
         progress = try c.decodeIfPresent(RankProgress.self, forKey: .progress) ?? RankProgress()
         settings = try c.decodeIfPresent(Settings.self, forKey: .settings) ?? Settings()
         ads = try c.decodeIfPresent(AdPolicy.self, forKey: .ads) ?? AdPolicy()
+        streak = try c.decodeIfPresent(StreakState.self, forKey: .streak) ?? StreakState()
+        daily = try c.decodeIfPresent(DailyResult.self, forKey: .daily)
+        askedReminders = try c.decodeIfPresent(Bool.self, forKey: .askedReminders) ?? false
     }
 }
 

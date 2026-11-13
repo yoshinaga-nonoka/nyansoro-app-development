@@ -10,6 +10,10 @@ enum DebugScenario: String, CaseIterable {
     case roundResult = "round-result"
     case matchResult = "match-result"
     case rankup
+    case streak
+    case revive
+    case nearMiss = "near-miss"
+    case dailyResult = "daily-result"
 
     static var current: DebugScenario? {
         let args = ProcessInfo.processInfo.arguments
@@ -21,9 +25,9 @@ enum DebugScenario: String, CaseIterable {
 enum DemoStates {
     /// 起動を速くするため、場面ごとに当たりの種を決めてある（変えたら seeds を探し直す）
     /// 決まった種で CPU対戦を始め、自分はおすすめを捨てながら、stop が true になるまで進める
-    static func play(rank: Int = 0, seeds: ClosedRange<UInt32> = 1...200, until stop: (GameState) -> Bool) -> GameState? {
+    static func play(mode: GameMode = .cpu(rank: 0), seeds: ClosedRange<UInt32> = 1...200, until stop: (GameState) -> Bool) -> GameState? {
         for seed in seeds {
-            var s = GameController.makeState(mode: .cpu(rank: rank), seed: seed)
+            var s = GameController.makeState(mode: mode, seed: seed)
             var r = Mulberry32(seed: seed &+ 7)
             for _ in 0..<3000 {
                 if stop(s) { return s }
@@ -60,9 +64,9 @@ extension AppModel {
     func applyDebugScenario(_ scenario: DebugScenario) {
         save.settings.sound = false
         save.settings.haptics = false
-        func startGame(_ state: GameState?) {
+        func startGame(_ state: GameState?, mode: GameMode = .cpu(rank: 0)) {
             debugInitialState = state
-            screen = .game(.cpu(rank: 0), UUID())
+            screen = .game(mode, UUID())
         }
         switch scenario {
         case .title:
@@ -88,6 +92,26 @@ extension AppModel {
         case .matchResult:
             save.ads.matchesFinished = 3
             startGame(DemoStates.play(seeds: 3...3) { $0.phase == .matchEnd && $0.place(of: 0) == 1 })
+        case .streak:
+            save.streak.current = 5
+            save.streak.best = 5
+            save.streak.lastDay = today - 1
+            save.daily = nil
+        case .revive:
+            save.streak.current = 5
+            save.streak.lastDay = today - 2
+            save.daily = nil
+        case .nearMiss:
+            startGame(DemoStates.play(seeds: 1...1) { s in
+                s.phase == .roundEnd && s.result?.winner != nil && s.result?.winner != 0
+                    && s.players[0].hand.count == handSize && distance(countKinds(s.players[0].hand)) == 1
+            })
+        case .dailyResult:
+            save.streak.current = 4
+            save.streak.lastDay = today - 1
+            save.daily = nil
+            let mode = GameMode.daily(day: today)
+            startGame(DemoStates.play(mode: mode, seeds: 1...1) { $0.phase == .matchEnd }, mode: mode)
         case .rankup:
             save.progress.rank = 0
             save.progress.stars = 2

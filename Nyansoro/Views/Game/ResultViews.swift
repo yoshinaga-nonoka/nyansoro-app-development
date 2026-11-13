@@ -72,11 +72,13 @@ struct RoundResultCard: View {
                 }
                 RubyText("お昼寝《ひるね》…", size: 24, display: true, alignment: .center)
                 RubyText("山《やま》がなくなって、誰《だれ》も揃《そろ》わなかったよ。", size: 14, alignment: .center)
+                feedback
             } else if let win = result.win, let w = result.winner {
                 let winner = state.players[w]
                 Stamp(text: "にゃん！")
                 RubyText(winner.isHuman ? "キミの勝《か》ち！" : "\(winner.name)の上《あ》がり", size: 20, display: true, alignment: .center)
                 RubyText(subtitle, size: 13, alignment: .center)
+                feedback
                 FlowLayout(alignment: .center) {
                     ForEach(Array(win.groups.enumerated()), id: \.offset) { item in
                         HStack(spacing: 2) {
@@ -123,6 +125,17 @@ struct RoundResultCard: View {
         }
     }
 
+    /// 惜しかったとき・上がったときの一言
+    @ViewBuilder
+    private var feedback: some View {
+        if let message = Feedback.roundMessage(state) {
+            RubyText(message, size: 15, display: true, color: result.winner == 0 ? Palette.goldInk : Palette.pinkInk, alignment: .center)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(result.winner == 0 ? Palette.gold.opacity(0.35) : Palette.pink.opacity(0.3)))
+        }
+    }
+
     private var subtitle: String {
         if result.kind == .tsumo { return "自分《じぶん》で引《ひ》いて揃《そろ》えた！" }
         let from = result.from.map { state.players[$0].name } ?? ""
@@ -137,6 +150,9 @@ struct MatchResultCard: View {
     let mode: GameMode
     let canOfferReward: Bool
     let onWatchAd: () -> Void
+    var currentRank = 0
+    var askReminders = false
+    var onEnableReminders: () -> Void = {}
     let onExit: () -> Void
     let onPlay: (GameMode) -> Void
 
@@ -152,6 +168,31 @@ struct MatchResultCard: View {
                         .buttonStyle(PillButtonStyle(kind: .ghost))
                     Button { onPlay(.cpu(rank: 0)) } label: { RubyText("CPUと対戦《たいせん》", size: 16, display: true, color: Palette.onPink) }
                         .buttonStyle(PillButtonStyle(kind: .primary))
+                }
+            case let .daily(d):
+                if d.won { Stamp(text: "クリア！") }
+                RubyText(d.won ? "今日《きょう》の1局《きょく》クリア！" : "今日《きょう》の1局《きょく》、残念《ざんねん》…", size: 22, display: true, alignment: .center)
+                RubyText(d.won ? "\(d.turns)巡目《じゅんめ》で上《あ》がり・\(d.points)点《てん》" : "また明日《あした》、新《あたら》しい配牌《はいぱい》で挑戦《ちょうせん》しよう", size: 14, alignment: .center)
+                StreakBadge(count: d.streak, big: true)
+                if let r = d.star {
+                    rewardView(r)
+                }
+                if askReminders {
+                    VStack(spacing: 6) {
+                        RubyText("毎日《まいにち》19時《じ》に、今日《きょう》の1局《きょく》をお知《し》らせする？", size: 13, alignment: .center)
+                        Button(action: onEnableReminders) {
+                            RubyText("お知《し》らせを受《う》け取《と》る", size: 15, display: true, color: Palette.onMint)
+                        }
+                        .buttonStyle(PillButtonStyle(kind: .secondary))
+                    }
+                }
+                HStack(spacing: 10) {
+                    Button(action: onExit) { RubyText("タイトルへ", size: 16, display: true) }
+                        .buttonStyle(PillButtonStyle(kind: .ghost))
+                    Button { onPlay(.cpu(rank: currentRank)) } label: {
+                        RubyText("CPUと対戦《たいせん》", size: 16, display: true, color: Palette.onPink)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .primary))
                 }
             case let .practice(place):
                 header(place)
@@ -244,5 +285,29 @@ struct MatchResultCard: View {
             }
             .buttonStyle(PillButtonStyle(kind: .primary))
         }
+    }
+}
+
+/// 連続日数の印（炎のマーク＋日数）
+struct StreakBadge: View {
+    let count: Int
+    var big = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: big ? 22 : 15, weight: .bold))
+                .foregroundColor(count > 0 ? Color(hex: 0xF08A3C) : Palette.lineStrong)
+            Text("\(count)")
+                .font(AppFont.display(big ? 24 : 16))
+                .foregroundColor(Palette.ink)
+            RubyText("日《にち》連続《れんぞく》", size: big ? 14 : 12, bold: true, color: Palette.inkSoft)
+                .fixedSize()
+        }
+        .padding(.horizontal, big ? 16 : 10)
+        .padding(.vertical, big ? 6 : 3)
+        .background(Capsule().fill(Palette.gold.opacity(count > 0 ? 0.45 : 0.15)))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(count)日連続")
     }
 }

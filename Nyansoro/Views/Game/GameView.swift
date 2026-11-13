@@ -57,7 +57,7 @@ struct GameView: View {
         HStack(spacing: 8) {
             IconButton(icon: .back, label: "試合をやめる") { game.showQuit = true }
             if !compact {
-                RubyText(game.tutorial ? "練習《れんしゅう》" : "\(game.rankDef?.name ?? "")ランク", size: 17, display: true)
+                RubyText(game.titleText, size: 17, display: true)
                     .fixedSize()
             }
             Spacer(minLength: 0)
@@ -430,6 +430,9 @@ struct GameView: View {
                 mode: game.mode,
                 canOfferReward: app.canOfferReward,
                 onWatchAd: { game.watchAdForStar() },
+                currentRank: app.save.progress.rank,
+                askReminders: !app.save.askedReminders,
+                onEnableReminders: { app.enableReminders() },
                 onExit: { app.leaveMatch { app.showTitle() } },
                 onPlay: { next in app.leaveMatch { app.play(next) } }
             )
