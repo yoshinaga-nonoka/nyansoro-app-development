@@ -9,6 +9,20 @@
    - 左の「Nyansoro」→ TARGETS「Nyansoro」→「Signing & Capabilities」で Team に自分の Apple ID を選ぶ
    - Bundle Identifier の `com.example.nyansoro` を、自分だけの名前（例：`com.あなたの名前.nyansoro` を英数字で）に変える
 
+### 自分の iPhone で試す（実機テスト）
+1. Xcode → Settings… → Accounts で、左下の「＋」から自分の Apple ID を追加する（無料でよい）
+2. iPhone をケーブルで Mac につなぎ、iPhone に出る「このコンピュータを信頼しますか？」で「信頼」
+3. iPhone の 設定 → プライバシーとセキュリティ → デベロッパモード をオンにして再起動する（項目は手順2の後に出る）
+4. Xcode 左の「Nyansoro」→ TARGETS「Nyansoro」→「Signing & Capabilities」
+   - 「Automatically manage signing」にチェック
+   - Team で自分の Apple ID（Personal Team）を選ぶ
+   - Bundle Identifier を自分だけの名前に変える（例：`com.yourname.nyansoro`。英数字とピリオドだけ）
+5. 画面上部の実行先で、つないだ iPhone を選んで ▶︎
+6. 初回だけ iPhone 側で止められたら：設定 → 一般 → VPNとデバイス管理 → 自分の Apple ID のデベロッパ を「信頼」して、もう一度 ▶︎
+
+無料の Apple ID で入れたアプリは7日で開けなくなる（もう一度 ▶︎ で入れ直せる）。
+2回目からは、同じ Wi-Fi なら Xcode の Window → Devices and Simulators で「Connect via network」にするとケーブルなしで入れられる。
+
 開けない・赤いエラーが出たときは、エラーの文章をそのまま送ってください。
 プロジェクトファイルが壊れている場合は、ターミナルで `brew install xcodegen` → このフォルダで `xcodegen` を実行すると作り直せます（`project.yml`）。
 

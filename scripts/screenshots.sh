@@ -4,13 +4,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-BID=com.example.nyansoro
 APP=build/Debug-iphonesimulator/Nyansoro.app
 mkdir -p shots
 
 echo "== ビルド"
 xcodebuild -project Nyansoro.xcodeproj -target Nyansoro -sdk iphonesimulator -configuration Debug \
   CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO build > build.log 2>&1 || { grep -E "error:" build.log | sort -u | head -50; exit 1; }
+
+# アプリの ID（Xcode で Bundle Identifier を変えても動くように、ビルドしたアプリから読む）
+BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+echo "== アプリ: $BID"
 
 # 名前が一致する端末（なければ、その種類の最初の端末）の UDID
 pick() {

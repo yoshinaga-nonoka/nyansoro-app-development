@@ -211,7 +211,7 @@ struct MatchResultCard: View {
                 Text("ランクアップ！")
                     .font(AppFont.display(24))
                     .foregroundColor(Palette.pinkInk)
-                RubyText("\(Ranks.all[r.newRank].name)になった！ マット「\(Ranks.all[r.newRank].mat.name)」が使《つか》えるよ", size: 14, alignment: .center)
+                RubyText("\(Ranks.all[r.newRank].name)になった！ マット「\(Ranks.all[r.newRank].mat.name)」が使《つか》えるよ", size: 13, alignment: .center)
             }
             .padding(14)
             .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Palette.surface2))
