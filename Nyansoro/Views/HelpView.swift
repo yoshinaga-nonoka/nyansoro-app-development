@@ -4,7 +4,7 @@ import SwiftUI
 
 struct HelpView: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case now, win, sets, cats, turn, score, marks, rank
+        case now, win, sets, cats, turn, score, marks, rank, mastery
         var id: String { rawValue }
 
         var label: String {
@@ -17,6 +17,7 @@ struct HelpView: View {
             case .score: return "点数《てんすう》"
             case .marks: return "マーク"
             case .rank: return "ランク"
+            case .mastery: return "上達《じょうたつ》のコツ"
             }
         }
     }
@@ -173,6 +174,9 @@ struct HelpView: View {
                     .frame(width: 60, height: 5)
             }, "点線《てんせん》：あと少《すこ》しで揃《そろ》うセット。")
             markRow({ StatusPill(dist: 1, win: false) }, "あと何枚《なんまい》で揃《そろ》うか。「待《ま》っている猫《ねこ》」が出《で》たら勝《か》ち。")
+        case .mastery:
+            LessonPointsPage()
+            LessonTipsPage()
         case .rank:
             RubyText("CPUとの試合《しあい》で1位《い》なら★2つ、2位《い》なら★1つ。★が貯《た》まるとランクアップ！ ランクは下《さ》がらないよ。")
             ForEach(Array(Ranks.all.enumerated()), id: \.offset) { item in

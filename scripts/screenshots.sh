@@ -51,7 +51,7 @@ PHONE=$(pick "iPhone 16" "iPhone")
 echo "== iPhone ($PHONE)"
 start "$PHONE"
 xcrun simctl ui "$PHONE" appearance light
-shoot "$PHONE" iphone tutorial game claim help settings round-result near-miss match-result rankup ranks title revive daily-result streak
+shoot "$PHONE" iphone tutorial game claim help settings round-result near-miss match-result rankup ranks title revive daily-result streak lesson missions
 WAIT=20 shoot "$PHONE" iphone ad-test
 xcrun simctl ui "$PHONE" appearance dark
 shoot "$PHONE" iphone-dark title game round-result

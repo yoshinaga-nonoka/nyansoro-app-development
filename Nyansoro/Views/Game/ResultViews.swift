@@ -58,6 +58,7 @@ struct DeltaList: View {
 struct RoundResultCard: View {
     let state: GameState
     let result: RoundResult
+    var missions: [MissionDef] = []
     let onNext: () -> Void
 
     var body: some View {
@@ -117,6 +118,9 @@ struct RoundResultCard: View {
                 }
                 .frame(maxWidth: 320)
             }
+            if !missions.isEmpty {
+                MissionChips(missions: missions)
+            }
             DeltaList(state: state, deltas: result.deltas)
             Button(action: onNext) {
                 RubyText(state.round + 1 >= state.rules.rounds ? "試合《しあい》の結果《けっか》へ" : "次《つぎ》の局《きょく》へ", size: 16, display: true, color: Palette.onPink)
@@ -151,10 +155,12 @@ struct MatchResultCard: View {
     let canOfferReward: Bool
     let onWatchAd: () -> Void
     var currentRank = 0
+    var review: MatchReview?
     var askReminders = false
     var onEnableReminders: () -> Void = {}
     let onExit: () -> Void
     let onPlay: (GameMode) -> Void
+    var onLesson: () -> Void = {}
 
     var body: some View {
         ModalCard {
@@ -162,7 +168,11 @@ struct MatchResultCard: View {
             case .tutorial:
                 Stamp(text: "クリア！")
                 RubyText("練習《れんしゅう》クリア！", size: 22, display: true, alignment: .center)
-                RubyText("次《つぎ》は子猫《こねこ》ランクでCPUと対戦《たいせん》しよう。分《わ》からなくなったら、いつでも「？」ボタン。", size: 14, alignment: .center)
+                RubyText("次《つぎ》は「上達《じょうたつ》レッスン」で、点数《てんすう》の稼《かせ》ぎ方《かた》とランクアップの道《みち》を見《み》てみよう。", size: 14, alignment: .center)
+                Button(action: onLesson) {
+                    RubyText("上達《じょうたつ》レッスンを見《み》る", size: 16, display: true, color: Palette.onGold)
+                }
+                .buttonStyle(PillButtonStyle(kind: .nyan))
                 HStack(spacing: 10) {
                     Button(action: onExit) { RubyText("タイトルへ", size: 16, display: true) }
                         .buttonStyle(PillButtonStyle(kind: .ghost))
@@ -174,6 +184,7 @@ struct MatchResultCard: View {
                 RubyText(d.won ? "今日《きょう》の1局《きょく》クリア！" : "今日《きょう》の1局《きょく》、残念《ざんねん》…", size: 22, display: true, alignment: .center)
                 RubyText(d.won ? "\(d.turns)巡目《じゅんめ》で上《あ》がり・\(d.points)点《てん》" : "また明日《あした》、新《あたら》しい配牌《はいぱい》で挑戦《ちょうせん》しよう", size: 14, alignment: .center)
                 StreakBadge(count: d.streak, big: true)
+                if let review { ReviewSection(review: review) }
                 if let r = d.star {
                     rewardView(r)
                 }
@@ -198,11 +209,13 @@ struct MatchResultCard: View {
                 header(place)
                 podium
                 RubyText("今《いま》より下《した》のランクなので★はなし。今《いま》のランクで★を集《あつ》めよう。", size: 14, alignment: .center)
+                if let review { ReviewSection(review: review) }
                 buttons(next: nil)
             case let .ranked(place, r):
                 header(place)
                 podium
                 rewardView(r)
+                if let review { ReviewSection(review: review) }
                 if canOfferReward && !r.rankedUp && !r.crowned {
                     Button(action: onWatchAd) {
                         RubyText("動画《どうが》を見《み》て★をもう1個《こ》", size: 15, display: true, color: Palette.onMint)
@@ -309,5 +322,81 @@ struct StreakBadge: View {
         .background(Capsule().fill(Palette.gold.opacity(count > 0 ? 0.45 : 0.15)))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(count)日連続")
+    }
+}
+
+/// 試合のあとのふりかえり：捨て方の正確さ・一言・達成した目標
+struct ReviewSection: View {
+    let review: MatchReview
+
+    var body: some View {
+        let t = review.tally
+        VStack(alignment: .leading, spacing: 8) {
+            RubyText("ふりかえり", size: 16, display: true)
+            if t.total > 0 {
+                HStack {
+                    RubyText("ベストな捨《す》て方《かた》", size: 13, bold: true)
+                    Spacer(minLength: 0)
+                    Text("\(t.best)/\(t.total)（\(Int((t.accuracy * 100).rounded()))%）")
+                        .font(AppFont.body(14, bold: true))
+                        .foregroundColor(Palette.ink)
+                        .monospacedDigit()
+                }
+                MeterBar(value: t.accuracy, color: t.accuracy >= 0.9 ? Palette.ok : t.accuracy >= 0.7 ? Palette.goldPress : Palette.pinkPress)
+                if t.miss > 0 {
+                    RubyText("遠回《とおまわ》りの捨《す》て方《かた》 \(t.miss)回《かい》", size: 12, color: Palette.inkSoft)
+                }
+            }
+            RubyText(review.tip, size: 13)
+            if !review.missions.isEmpty {
+                MissionChips(missions: review.missions.map { Missions.def($0) })
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: 380, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Palette.surface2))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Palette.line, lineWidth: 2))
+    }
+}
+
+/// 横棒のメーター（0〜1）
+struct MeterBar: View {
+    let value: Double
+    var color: Color = Palette.ok
+
+    var body: some View {
+        Capsule()
+            .fill(Palette.line)
+            .frame(height: 8)
+            .overlay(alignment: .leading) {
+                GeometryReader { g in
+                    Capsule().fill(color).frame(width: max(8, g.size.width * min(1, max(0, value))))
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// 達成した目標（称号）の印
+struct MissionChips: View {
+    let missions: [MissionDef]
+
+    var body: some View {
+        FlowLayout(alignment: .center) {
+            ForEach(missions) { m in
+                HStack(spacing: 4) {
+                    Image(systemName: "rosette")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(Palette.goldInk)
+                    RubyText("目標達成《もくひょうたっせい》：\(m.badge)", size: 12, bold: true)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Palette.gold.opacity(0.45)))
+                .padding(3)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("目標達成：" + missions.map { plainText($0.badge) }.joined(separator: "、"))
     }
 }

@@ -16,6 +16,8 @@ enum DebugScenario: String, CaseIterable {
     case dailyResult = "daily-result"
     /// 起動して少ししたらリワード広告を出す（AdMob のテスト広告が出るかの確認）
     case adTest = "ad-test"
+    case lesson
+    case missions
 
     static var current: DebugScenario? {
         let args = ProcessInfo.processInfo.arguments
@@ -114,6 +116,19 @@ extension AppModel {
             save.daily = nil
             let mode = GameMode.daily(day: today)
             startGame(DemoStates.play(mode: mode, seeds: 1...1) { $0.phase == .matchEnd }, mode: mode)
+        case .lesson:
+            showLesson = true
+        case .missions:
+            var p = MissionProgress()
+            for id in [MissionID.firstWin, .tsumoWin, .noJokerWin, .allFamilyWin] { _ = p.add(id) }
+            for _ in 0..<6 { _ = p.add(.wins10) }
+            _ = p.setAtLeast(.streak7, 4)
+            save.missions = p
+            var st = PlayStats()
+            st.matches = 12; st.rounds = 48; st.wins = 14; st.bestPoints = 25; st.fastestWin = 3
+            st.decisions = 160; st.bestDecisions = 131
+            save.stats = st
+            showMissions = true
         case .adTest:
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 2_000_000_000)

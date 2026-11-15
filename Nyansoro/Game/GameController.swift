@@ -13,6 +13,12 @@ final class GameController: ObservableObject {
     @Published private(set) var tStep: Int
     @Published private(set) var nudge: String?
     @Published var reward: MatchReward?
+    /// この試合の捨て方のふりかえり
+    @Published private(set) var tally = DecisionTally()
+    /// 今の局で達成した目標
+    @Published private(set) var roundMissions: [MissionDef] = []
+    /// 試合のふりかえり（試合が終わったら入る）
+    @Published private(set) var review: MatchReview?
     @Published var showHelp = false { didSet { schedule() } }
     @Published var showSettings = false { didSet { schedule() } }
     @Published var showQuit = false { didSet { schedule() } }
@@ -39,6 +45,13 @@ final class GameController: ObservableObject {
             if demo.phase == .matchEnd {
                 ended = true
                 reward = app.matchEnded(mode: mode, state: demo)
+                // 撮影用：ふりかえりの見本（実際の試合では捨てるたびに数える）
+                var sample = DecisionTally()
+                sample.best = 13
+                sample.good = 2
+                sample.miss = 1
+                tally = sample
+                review = app.recordMatch(demo, mode: mode, tally: sample)
             }
             return
         }
@@ -101,6 +114,8 @@ final class GameController: ObservableObject {
         var baseTiles: [Tile]
         var drawnTile: Tile?
         var recTileId: Int?
+        /// あと1枚のとき、上がったら何点か（最小〜最大）
+        var waitPoints: (min: Int, max: Int)?
     }
 
     private var derivedKey = ""
@@ -124,7 +139,17 @@ final class GameController: ObservableObject {
                 recTileId = order.last { $0.kind == rec }?.id
             }
         }
-        let d = Derived(insight: insight, arrangement: arrangement, baseTiles: base, drawnTile: drawn, recTileId: recTileId)
+        var waitPoints: (min: Int, max: Int)?
+        if hints, let ins = insight, ins.dist == 1 {
+            if me.hand.count == handSize {
+                waitPoints = Coaching.waitPoints(hand8: me.hand)
+            } else if let rec = ins.rec, let i = me.hand.lastIndex(where: { $0.kind == rec }) {
+                var hand8 = me.hand
+                hand8.remove(at: i)
+                waitPoints = Coaching.waitPoints(hand8: hand8)
+            }
+        }
+        let d = Derived(insight: insight, arrangement: arrangement, baseTiles: base, drawnTile: drawn, recTileId: recTileId, waitPoints: waitPoints)
         derivedKey = key
         derivedCache = d
         return d
@@ -157,9 +182,15 @@ final class GameController: ObservableObject {
             if tStep == 10, state.phase == .discard, state.current == 0 { tStep = 2 }
             if tStep == 4, state.phase == .claim, state.claimQueue.first == 0 { tStep = 5 }
         }
+        if state.phase == .roundEnd, prev.phase != .roundEnd {
+            roundMissions = app.recordRound(state)
+        } else if state.phase != .roundEnd {
+            roundMissions = []
+        }
         if state.phase == .matchEnd, !ended {
             ended = true
             reward = app.matchEnded(mode: mode, state: state)
+            if !tutorial { review = app.recordMatch(state, mode: mode, tally: tally) }
             SoundPlayer.shared.fanfare()
         }
         schedule()
@@ -182,6 +213,14 @@ final class GameController: ObservableObject {
         }
         selectedId = nil
         if tutorial, tStep == 3 { tStep = 4 }
+        // 捨て方を評価して数える（練習・上がれる手のときは数えない）
+        if !tutorial, myDiscardTurn, !canWin(me.hand), let grade = Coaching.grade(state, seat: 0, discarding: tile.kind) {
+            switch grade {
+            case .best: tally.best += 1
+            case .good: tally.good += 1
+            case .miss: tally.miss += 1
+            }
+        }
         act(.discard(tileId: tile.id))
     }
 

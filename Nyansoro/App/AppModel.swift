@@ -43,6 +43,8 @@ final class AppModel: ObservableObject {
     @Published var showHelp = false
     @Published var showSettings = false
     @Published var showOnline = false
+    @Published var showLesson = false
+    @Published var showMissions = false
 
     /// 広告。AdMob が入っていれば AdMob（開発用はテスト広告）、なければ開発用ビルドだけダミー広告
     let debugAds = DebugAdService()

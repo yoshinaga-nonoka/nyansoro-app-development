@@ -118,6 +118,26 @@ struct TitleView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("★ \(progress.stars) / \(rank.starsToNext)")
                 RubyText("あと★\(rank.starsToNext - progress.stars)個《こ》で\(progress.rank == Ranks.all.count - 1 ? "王冠《おうかん》" : "ランクアップ")", size: 12, bold: true, color: Palette.inkSoft)
+                if let next = app.nextRank {
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(next.mat.style.fill)
+                            .overlay(Circle().strokeBorder(next.mat.style.edge, lineWidth: 2))
+                            .frame(width: 14, height: 14)
+                        RubyText("次《つぎ》は\(next.name)ランク・ご褒美《ほうび》「\(next.mat.name)」", size: 12, color: Palette.inkSoft)
+                    }
+                }
+                if let badge = app.save.missions.latestBadge {
+                    HStack(spacing: 4) {
+                        Image(systemName: "rosette")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Palette.goldInk)
+                        RubyText(badge, size: 12, bold: true)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Palette.gold.opacity(0.4)))
+                }
             }
             Spacer(minLength: 0)
         }
@@ -151,6 +171,25 @@ struct TitleView: View {
                 Button { app.showRanks() } label: {
                     RubyText("ランクを選《えら》ぶ", size: 16, display: true)
                         .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PillButtonStyle(kind: .ghost))
+            }
+
+            HStack(spacing: 12) {
+                Button { app.showMissions = true } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "rosette")
+                        RubyText("目標《もくひょう》と成績《せいせき》", size: 15, display: true)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PillButtonStyle(kind: .ghost))
+                Button { app.showLesson = true } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "graduationcap")
+                        RubyText("上達《じょうたつ》レッスン", size: 15, display: true)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PillButtonStyle(kind: .ghost))
             }

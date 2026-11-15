@@ -280,3 +280,53 @@ final class FeedbackTests: XCTestCase {
         XCTAssertEqual(Feedback.winTurns(s, seat: 0), 1)
     }
 }
+
+final class MissionTests: XCTestCase {
+    private func setups() -> [PlayerSetup] {
+        (0..<4).map { PlayerSetup(name: "p\($0)", isHuman: $0 == 0, level: 1, avatar: 0) }
+    }
+
+    func testPerfectWinCompletesSeveralMissions() {
+        var s = GameState(setups: setups(), rules: Rules(rounds: 1, furikomiPenalty: 0), seed: 5)
+        var id = 7000
+        func t(_ k: Int) -> Tile { id += 1; return Tile(id: id, kind: k) }
+        s.players[0].hand = [0, 0, 0, 3, 3, 3, 6, 6, 6].map(t)
+        s.phase = .discard
+        s.current = 0
+        XCTAssertTrue(s.apply(.tsumo))
+        var p = MissionProgress()
+        var stats = PlayStats()
+        let done = MissionTracker.roundEnded(s, progress: &p, stats: &stats).map(\.id)
+        XCTAssertEqual(Set(done), [.firstWin, .tsumoWin, .noJokerWin, .allSameWin, .fastWin, .bigWin, .perfectWin])
+        XCTAssertEqual(stats.wins, 1)
+        XCTAssertEqual(stats.bestPoints, 30)
+        XCTAssertEqual(stats.fastestWin, 1)
+        XCTAssertEqual(p.count(.wins10), 1)
+        XCTAssertTrue(MissionTracker.roundEnded(s, progress: &p, stats: &stats).isEmpty, "achieved missions are not repeated")
+        XCTAssertNotNil(p.latestBadge)
+    }
+
+    func testStreakMissions() {
+        var p = MissionProgress()
+        XCTAssertTrue(MissionTracker.streakUpdated(2, progress: &p).isEmpty)
+        XCTAssertEqual(MissionTracker.streakUpdated(3, progress: &p).map(\.id), [.streak3])
+        XCTAssertTrue(MissionTracker.streakUpdated(1, progress: &p).isEmpty, "a broken streak does not lower progress")
+        XCTAssertEqual(p.count(.streak7), 3)
+    }
+
+    func testGradeAndWaitPoints() {
+        var s = GameState(setups: setups(), rules: Rules(rounds: 1, furikomiPenalty: 0), seed: 5)
+        var id = 8000
+        func t(_ k: Int) -> Tile { id += 1; return Tile(id: id, kind: k) }
+        // 三毛パパ×3・黒の家族2匹・白の子猫×2・茶トラのママ ＋ 黒の子猫を引いた
+        s.players[0].hand = [0, 0, 0, 3, 4, 8, 8, 10, 5].map(t)
+        s.phase = .discard
+        s.current = 0
+        XCTAssertEqual(Coaching.grade(s, seat: 0, discarding: 10), .best)
+        XCTAssertEqual(Coaching.grade(s, seat: 0, discarding: 0), .miss)
+        let hand8 = s.players[0].hand.filter { $0.kind != 10 }
+        let pts = Coaching.waitPoints(hand8: hand8)!
+        XCTAssertEqual(pts.min, 10, "白の子猫か招き猫でロン：混ざった形なので上がりの10点")
+        XCTAssertEqual(pts.max, 20, "白の子猫を自分で引けば 10＋5＋招き猫なし5")
+    }
+}

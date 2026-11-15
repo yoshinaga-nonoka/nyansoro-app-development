@@ -288,7 +288,7 @@ struct GameView: View {
             } else if game.myDiscardTurn && ins.rec != nil {
                 HStack(spacing: 4) {
                     PawIcon().frame(width: 20, height: 20)
-                    RubyText(ins.dist == 1 ? "を捨《す》てると**あと1枚《まい》！**" : "がおすすめ。いらない猫《ねこ》を捨《す》てよう", size: 14)
+                    RubyText(ins.dist == 1 ? "を捨《す》てると**あと1枚《まい》！**\(pointsText(d.waitPoints))" : "がおすすめ。いらない猫《ねこ》を捨《す》てよう", size: 14)
                 }
             } else if game.myDiscardTurn {
                 RubyText("いらない猫《ねこ》を1枚《まい》捨《す》てよう", size: 14)
@@ -304,11 +304,21 @@ struct GameView: View {
                                 .foregroundColor(Palette.inkSoft)
                         }
                     }
+                    if let p = d.waitPoints {
+                        RubyText(p.min == p.max ? "\(p.max)点《てん》" : "\(p.min)〜\(p.max)点《てん》", size: 13, bold: true, color: Palette.goldInk)
+                            .fixedSize()
+                    }
                 }
             } else {
                 RubyText("他《ほか》の人《ひと》の番《ばん》。捨《す》てられた猫《ねこ》もチェックしよう", size: 14)
             }
         }
+    }
+
+    /// 「上がれば◯〜◯点」（点数を意識してもらうため）
+    private func pointsText(_ p: (min: Int, max: Int)?) -> String {
+        guard let p else { return "" }
+        return p.min == p.max ? "　上《あ》がれば\(p.max)点《てん》" : "　上《あ》がれば\(p.min)〜\(p.max)点《てん》"
     }
 
     private func tutorialLine(_ step: Int) -> String {
@@ -422,7 +432,7 @@ struct GameView: View {
     private var overlays: some View {
         let s = game.state
         if s.phase == .roundEnd, let r = s.result, !game.showHelp, !game.showSettings {
-            RoundResultCard(state: s, result: r) { game.nextRound() }
+            RoundResultCard(state: s, result: r, missions: game.roundMissions) { game.nextRound() }
         } else if s.phase == .matchEnd, let reward = game.reward {
             MatchResultCard(
                 state: s,
@@ -431,10 +441,12 @@ struct GameView: View {
                 canOfferReward: app.canOfferReward,
                 onWatchAd: { game.watchAdForStar() },
                 currentRank: app.save.progress.rank,
+                review: game.review,
                 askReminders: !app.save.askedReminders,
                 onEnableReminders: { app.enableReminders() },
                 onExit: { app.leaveMatch { app.showTitle() } },
-                onPlay: { next in app.leaveMatch { app.play(next) } }
+                onPlay: { next in app.leaveMatch { app.play(next) } },
+                onLesson: { app.showLesson = true }
             )
         }
         if game.showQuit {

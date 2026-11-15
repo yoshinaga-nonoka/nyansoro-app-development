@@ -68,6 +68,9 @@ struct SaveData: Codable, Equatable {
     var daily: DailyResult?
     /// 通知の許可をもう聞いたか
     var askedReminders = false
+    /// 目標・成績（上達のしくみ）
+    var missions = MissionProgress()
+    var stats = PlayStats()
 
     init() {}
 
@@ -79,6 +82,8 @@ struct SaveData: Codable, Equatable {
         streak = try c.decodeIfPresent(StreakState.self, forKey: .streak) ?? StreakState()
         daily = try c.decodeIfPresent(DailyResult.self, forKey: .daily)
         askedReminders = try c.decodeIfPresent(Bool.self, forKey: .askedReminders) ?? false
+        missions = try c.decodeIfPresent(MissionProgress.self, forKey: .missions) ?? MissionProgress()
+        stats = try c.decodeIfPresent(PlayStats.self, forKey: .stats) ?? PlayStats()
     }
 }
 

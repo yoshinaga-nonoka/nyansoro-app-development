@@ -42,6 +42,16 @@ struct RootView: View {
             HelpView(game: nil)
                 .environment(\.furigana, app.settings.furigana)
         }
+        .sheet(isPresented: $app.showLesson) {
+            LessonView()
+                .environmentObject(app)
+                .environment(\.furigana, app.settings.furigana)
+        }
+        .sheet(isPresented: $app.showMissions) {
+            MissionsView()
+                .environmentObject(app)
+                .environment(\.furigana, app.settings.furigana)
+        }
         .sheet(isPresented: $app.showSettings) {
             SettingsView(app: app)
                 .environment(\.furigana, app.settings.furigana)
