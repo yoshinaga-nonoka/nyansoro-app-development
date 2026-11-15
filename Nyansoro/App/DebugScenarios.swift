@@ -18,6 +18,8 @@ enum DebugScenario: String, CaseIterable {
     case adTest = "ad-test"
     case lesson
     case missions
+    /// 遊び方の「猫」タブ（猫の絵柄19種類の確認用）
+    case helpCats = "help-cats"
 
     static var current: DebugScenario? {
         let args = ProcessInfo.processInfo.arguments
@@ -85,7 +87,7 @@ extension AppModel {
             showSettings = true
         case .game:
             startGame(DemoStates.play { $0.phase == .discard && $0.current == 0 && $0.players.reduce(0) { $0 + $1.discards.count } >= 12 })
-        case .help:
+        case .help, .helpCats:
             debugOpenHelp = true
             startGame(DemoStates.play { $0.phase == .discard && $0.current == 0 && $0.players.reduce(0) { $0 + $1.discards.count } >= 8 })
         case .claim:

@@ -31,7 +31,11 @@ struct HelpView: View {
         self.game = game
         self.recommendOn = recommendOn
         let inGame = game.map { $0.phase != .matchEnd } ?? false
-        _tab = State(initialValue: inGame ? .now : .win)
+        var first: Tab = inGame ? .now : .win
+        #if DEBUG
+        if DebugScenario.current == .helpCats { first = .cats }
+        #endif
+        _tab = State(initialValue: first)
     }
 
     private var inGame: Bool { game.map { $0.phase != .matchEnd } ?? false }
