@@ -140,8 +140,9 @@ final class RiichiTests: XCTestCase {
 
     func testCpuDeclaresRiichiWhenReady() {
         let (s, junk) = readyState()
-        XCTAssertEqual(chooseAction(s, 0, level: 3, rand: { 0.99 }), .riichi(tileId: junk.id))
-        // Lv1 はときどき言い忘れる
+        XCTAssertEqual(chooseAction(s, 0, level: 4, rand: { 0.99 }), .riichi(tileId: junk.id))
+        XCTAssertEqual(chooseAction(s, 0, level: 3, rand: { 0.5 }), .riichi(tileId: junk.id))
+        // 下のレベルはときどき言い忘れる
         XCTAssertEqual(chooseAction(s, 0, level: 1, rand: { 0.99 }), .discard(tileId: junk.id))
     }
 
