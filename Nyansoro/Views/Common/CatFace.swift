@@ -1,4 +1,4 @@
-// 猫の絵柄。Web版のSVG（100×100の座標）をそのまま Path にして Canvas で描く。
+// 猫の絵柄（絵本風）。100×100 の座標の SVG path を Path にして Canvas で描く。
 // 家族は毛の模様で、パパ・ママ・子猫は「蝶ネクタイ・リボン・鈴＋小さい顔」で見分ける。
 
 import SwiftUI
@@ -75,50 +75,52 @@ enum SVGPath {
 }
 
 private enum Shapes {
-    static let outline = Color(hex: 0x4A3B48)
-    static let head = SVGPath.parse("M16 50 C14 36 16 22 22 12 C28 16 36 24 41 29 C47 27 53 27 59 29 C64 24 72 16 78 12 C84 22 86 36 84 50 C90 72 72 88 50 88 C28 88 10 72 16 50 Z")
-    static let earL = SVGPath.parse("M23 19 C26 23 31 27 35 30 C30 32 25 34 21 37 C20 31 21 25 23 19 Z")
-    static let earR = SVGPath.parse("M77 19 C74 23 69 27 65 30 C70 32 75 34 79 37 C80 31 79 25 77 19 Z")
-    static let mikeOrange = SVGPath.parse("M16 50 C14 36 16 22 22 12 C28 16 36 24 41 29 C44 35 41 44 33 47 C25 50 19 53 16 50 Z")
-    static let mikeBlack = SVGPath.parse("M59 29 C64 24 72 16 78 12 C84 22 86 36 84 50 C79 49 72 45 67 40 C62 36 60 32 59 29 Z")
-    static let hachiWhite = SVGPath.parse("M50 36 C47 46 43 55 37 62 C31 69 31 79 40 84 C46 87 54 87 60 84 C69 79 69 69 63 62 C57 55 53 46 50 36 Z")
-    static let stripesHead = SVGPath.parse("M44 33 L45.5 41 M50 31 L50 41 M56 33 L54.5 41")
-    static let stripesCheek = SVGPath.parse("M16.5 57 L25 58.5 M17.5 64 L25 64.5 M83.5 57 L75 58.5 M82.5 64 L75 64.5")
-    static let nose = SVGPath.parse("M46.5 64 L53.5 64 L50 68 Z")
-    static let mouth = SVGPath.parse("M43 69.5 Q46.5 74.5 50 69.5 Q53.5 74.5 57 69.5")
-    static let whiskers = SVGPath.parse("M5 61 L21 63 M5 68 L21 67.5 M95 61 L79 63 M95 68 L79 67.5")
-    static let happyEyes = SVGPath.parse("M29 58 Q36 50 43 58 M57 58 Q64 50 71 58")
-    static let bowL = SVGPath.parse("M50 91 L36 84 L36 98 Z")
-    static let bowR = SVGPath.parse("M50 91 L64 84 L64 98 Z")
-    static let ribbonL = SVGPath.parse("M68 24 C60 13 52 22 59 28.5 C62 31 66 27.5 68 24 Z")
-    static let ribbonR = SVGPath.parse("M68 24 C74 11 85 16 79.5 25.5 C76.5 30.5 71 28 68 24 Z")
-    static let lashes = SVGPath.parse("M29.6 50.5 L25.5 47.5 M70.4 50.5 L74.5 47.5")
-    static let kittenCollar = SVGPath.parse("M31 82 Q50 90 69 82")
-    static let manekiCollar = SVGPath.parse("M28 84 Q50 93 72 84")
+    static let outline = Color(hex: 0x5B4339)
+    static let head = SVGPath.parse("M12 61 C11 50 14 41 19 34 C18 26 18 18 21 12 C22.5 9.5 25 9 27.5 10.5 C32.5 13.5 37.5 18.5 41 23 C47 21.3 53 21.3 59 23 C62.5 18.5 67.5 13.5 72.5 10.5 C75 9 77.5 9.5 79 12 C82 18 82 26 81 34 C86 41 89 50 88 61 C87 78 71 89 50 89 C29 89 13 78 12 61 Z")
+    static let earL = SVGPath.parse("M24.5 15.5 C28.5 18.5 32.5 22.5 35.5 26.5 C30.5 27.5 26.5 29.5 23 32.5 C22 26.5 22.5 20.5 24.5 15.5 Z")
+    static let earR = SVGPath.parse("M75.5 15.5 C71.5 18.5 67.5 22.5 64.5 26.5 C69.5 27.5 73.5 29.5 77 32.5 C78 26.5 77.5 20.5 75.5 15.5 Z")
+    static let mikeOrange = SVGPath.parse("M8 8 L44 8 C47 18 46 30 40 37 C33 45 22 47 8 52 Z")
+    static let mikeBlack = SVGPath.parse("M57 20 C62 12 75 4 92 8 L92 46 C84 45 74 41 68 35 C62 30 58 25 57 20 Z")
+    static let hachiWhite = SVGPath.parse("M50 33 C46 43 40 50 33 56 C26 62 24 74 30 92 L70 92 C76 74 74 62 67 56 C60 50 54 43 50 33 Z")
+    static let stripesHead = SVGPath.parse("M43 25.5 C43.5 29 44.3 32 45.5 34.5 M50 24 L50 34 M57 25.5 C56.5 29 55.7 32 54.5 34.5")
+    static let stripesCheek = SVGPath.parse("M11 55 C15 55 19 56 22 57.5 M11.5 63 C15 62.5 19 62.5 22 63.5 M89 55 C85 55 81 56 78 57.5 M88.5 63 C85 62.5 81 62.5 78 63.5")
+    static let muzzle = SVGPath.parse("M36 70 C36 63 43 61 50 64 C57 61 64 63 64 70 C64 76 57 79 50 77 C43 79 36 76 36 70 Z")
+    static let nose = SVGPath.parse("M46.6 65.2 C46.6 63.8 53.4 63.8 53.4 65.2 C53.4 66.8 51.3 68.4 50 68.4 C48.7 68.4 46.6 66.8 46.6 65.2 Z")
+    static let mouth = SVGPath.parse("M50 68.4 L50 70 M44.5 69.8 C45.5 72.8 49 72.8 50 70 C51 72.8 54.5 72.8 55.5 69.8")
+    static let whiskers = SVGPath.parse("M4 62 C10 61.5 15 62 20 63.5 M5 69 C10 68 15 67.8 20.5 68.2 M96 62 C90 61.5 85 62 80 63.5 M95 69 C90 68 85 67.8 79.5 68.2")
+    static let happyEyes = SVGPath.parse("M30.5 59 C32.5 54.5 39.5 54.5 41.5 59 M58.5 59 C60.5 54.5 67.5 54.5 69.5 59")
+    static let lashes = SVGPath.parse("M32 54.4 C30.4 53.8 29.2 52.8 28.4 51.4 M70 54.4 C71.6 53.8 72.8 52.8 73.6 51.4")
+    static let bowL = SVGPath.parse("M50 91.5 C45 86 37 83 35.5 86.5 C34.5 89.5 34.5 93.5 35.5 96.5 C37 100 45 97 50 91.5 Z")
+    static let bowR = SVGPath.parse("M50 91.5 C55 86 63 83 64.5 86.5 C65.5 89.5 65.5 93.5 64.5 96.5 C63 100 55 97 50 91.5 Z")
+    static let bowFolds = SVGPath.parse("M38.5 88.5 C40.5 90 40.5 93 38.5 94.5 M61.5 88.5 C59.5 90 59.5 93 61.5 94.5")
+    static let ribbonL = SVGPath.parse("M70 22 C64 12 55 15 57.5 22.5 C59.5 28 65.5 26.5 70 22 Z")
+    static let ribbonR = SVGPath.parse("M70 22 C73 11 82.5 11 82.5 18.5 C82.5 25 74.5 26 70 22 Z")
+    static let ribbonTails = SVGPath.parse("M68.5 24 C67 28 65.5 30.5 63.5 32 M71.5 24 C73.5 27.5 75.5 29.5 78 30.5")
+    static let kittenCollar = SVGPath.parse("M30 81.5 C40 87.5 60 87.5 70 81.5")
+    static let manekiCollar = SVGPath.parse("M28 82.5 C40 89.5 60 89.5 72 82.5")
+    static let manekiPaw = SVGPath.parse("M3 52 C1 44 2 35 8 31 C13 28 19 31 20 37 C21 43 20 49 17 54 Z")
 }
 
 private struct Fur {
     let base: Color
     let earIn: Color
-    let eye: Color
     let whisker: Color
-    let mouth: Color
-    let blush: Double
+    let dark: Bool
     let pattern: Int // 0なし 1三毛 2しま 3ハチワレ
     let stripe: Color
 }
 
 private let furs: [Fur] = [
-    Fur(base: Color(hex: 0xFFFAF2), earIn: Color(hex: 0xF7A8BD), eye: Color(hex: 0xE7A93A), whisker: Color(hex: 0x8A7B86), mouth: Shapes.outline, blush: 0.55, pattern: 1, stripe: .clear),
-    Fur(base: Color(hex: 0x2F2A33), earIn: Color(hex: 0x7A5566), eye: Color(hex: 0xF2CF3C), whisker: Color(hex: 0xCFC6D6), mouth: Color(hex: 0xE7DCEF), blush: 0.35, pattern: 0, stripe: .clear),
-    Fur(base: Color(hex: 0xFFFFFF), earIn: Color(hex: 0xF7A8BD), eye: Color(hex: 0x5AA9E6), whisker: Color(hex: 0x9A8FA0), mouth: Shapes.outline, blush: 0.55, pattern: 0, stripe: .clear),
-    Fur(base: Color(hex: 0xF5A457), earIn: Color(hex: 0xF7A8BD), eye: Color(hex: 0x8CC152), whisker: Color(hex: 0x8A5A2E), mouth: Shapes.outline, blush: 0.5, pattern: 2, stripe: Color(hex: 0xD4701F)),
-    Fur(base: Color(hex: 0xA9ADB8), earIn: Color(hex: 0xF0B3C4), eye: Color(hex: 0x76C46A), whisker: Color(hex: 0x4F5460), mouth: Shapes.outline, blush: 0.5, pattern: 2, stripe: Color(hex: 0x5B606C)),
-    Fur(base: Color(hex: 0x2F2A33), earIn: Color(hex: 0x7A5566), eye: Color(hex: 0xE7A93A), whisker: Color(hex: 0xCFC6D6), mouth: Shapes.outline, blush: 0.45, pattern: 3, stripe: .clear),
+    Fur(base: Color(hex: 0xFFF8EC), earIn: Color(hex: 0xF8B4C2), whisker: Color(hex: 0x9C8578), dark: false, pattern: 1, stripe: .clear),
+    Fur(base: Color(hex: 0x3A3138), earIn: Color(hex: 0x8C6474), whisker: Color(hex: 0xD9CCD4), dark: true, pattern: 0, stripe: .clear),
+    Fur(base: Color(hex: 0xFFFFFF), earIn: Color(hex: 0xF8B4C2), whisker: Color(hex: 0xA8988F), dark: false, pattern: 0, stripe: .clear),
+    Fur(base: Color(hex: 0xF6B26B), earIn: Color(hex: 0xF9BFC0), whisker: Color(hex: 0x9A6A43), dark: false, pattern: 2, stripe: Color(hex: 0xDE8640)),
+    Fur(base: Color(hex: 0xB9BDC6), earIn: Color(hex: 0xF2BCC8), whisker: Color(hex: 0x626774), dark: false, pattern: 2, stripe: Color(hex: 0x7A808D)),
+    Fur(base: Color(hex: 0x3A3138), earIn: Color(hex: 0x8C6474), whisker: Color(hex: 0xD9CCD4), dark: true, pattern: 3, stripe: .clear),
 ]
 
 private let accessoryColors: [Color] = [
-    Color(hex: 0xF07D8C), Color(hex: 0xA77BE0), Color(hex: 0x5FAEE6), Color(hex: 0xF29A4A), Color(hex: 0x4DBE85), Color(hex: 0xE8B931),
+    Color(hex: 0xF28C9A), Color(hex: 0xB08BE6), Color(hex: 0x6DB6EC), Color(hex: 0xF4A65A), Color(hex: 0x5CC594), Color(hex: 0xEDC04A),
 ]
 
 enum CatPainter {
@@ -130,45 +132,97 @@ enum CatPainter {
         ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
     }
 
-    private static func face(_ ctx: inout GraphicsContext, fur: Fur, bigEyes: Bool, happy: Bool) {
+    private static func fillOutlined(_ ctx: inout GraphicsContext, _ path: Path, _ color: Color, _ width: CGFloat = 1.6) {
+        ctx.fill(path, with: .color(color))
+        ctx.stroke(path, with: .color(Shapes.outline), style: StrokeStyle(lineWidth: width, lineJoin: .round))
+    }
+
+    /// ふんわりしたほっぺ（中心から外へ透明になる）
+    private static func blush(_ ctx: inout GraphicsContext, _ cx: CGFloat, _ cy: CGFloat, strength: Double) {
+        var c = ctx
+        c.translateBy(x: cx, y: cy)
+        c.scaleBy(x: 1, y: 5.0 / 8.0)
+        let pink = Color(hex: 0xFF8FA8)
+        c.fill(ellipse(0, 0, 8, 8), with: .radialGradient(
+            Gradient(colors: [pink.opacity(strength), pink.opacity(0)]),
+            center: .zero, startRadius: 0, endRadius: 8))
+    }
+
+    /// 鈴
+    private static func bell(_ ctx: inout GraphicsContext, _ cx: CGFloat, _ cy: CGFloat, _ r: CGFloat) {
+        let body = ellipse(cx, cy, r, r)
+        ctx.fill(body, with: .color(Color(hex: 0xF7CB4D)))
+        ctx.stroke(body, with: .color(Color(hex: 0xA87A12)), lineWidth: 1.2)
+        ctx.fill(ellipse(cx - r * 0.35, cy - r * 0.35, r * 0.32, r * 0.32), with: .color(Color(hex: 0xFFF3C4)))
+        var slit = Path()
+        slit.move(to: CGPoint(x: cx, y: cy + r * 0.15))
+        slit.addLine(to: CGPoint(x: cx, y: cy + r * 0.75))
+        stroke(&ctx, slit, Color(hex: 0xA87A12), 1.1)
+    }
+
+    private static func face(_ ctx: inout GraphicsContext, fur: Fur, bigEyes: Bool = false, happy: Bool = false, lashes: Bool = false) {
         ctx.fill(Shapes.head, with: .color(fur.base))
-        switch fur.pattern {
-        case 1:
-            ctx.fill(Shapes.mikeOrange, with: .color(Color(hex: 0xF0A04B)))
-            ctx.fill(Shapes.mikeBlack, with: .color(Color(hex: 0x3B3236)))
-        case 2:
-            stroke(&ctx, Shapes.stripesHead, fur.stripe, 3.4)
-            stroke(&ctx, Shapes.stripesCheek, fur.stripe, 3.4)
-        case 3:
-            ctx.fill(Shapes.hachiWhite, with: .color(.white))
-        default:
-            break
+        do { // 模様は頭の形の内側だけに塗る
+            var inside = ctx
+            inside.clip(to: Shapes.head)
+            switch fur.pattern {
+            case 1:
+                inside.fill(Shapes.mikeOrange, with: .color(Color(hex: 0xF2A65A)))
+                inside.fill(Shapes.mikeBlack, with: .color(Color(hex: 0x4A3F45)))
+            case 2:
+                stroke(&inside, Shapes.stripesHead, fur.stripe, 3.6)
+                stroke(&inside, Shapes.stripesCheek, fur.stripe, 3.4)
+            case 3:
+                inside.fill(Shapes.hachiWhite, with: .color(.white))
+            default:
+                break
+            }
+            // 絵本の塗りのような、やわらかい光
+            var light = inside
+            light.translateBy(x: 40, y: 38)
+            light.rotate(by: .degrees(-12))
+            light.opacity = fur.dark ? 0.07 : 0.22
+            light.fill(ellipse(0, 0, 14, 8), with: .color(.white))
         }
         ctx.fill(Shapes.earL, with: .color(fur.earIn))
         ctx.fill(Shapes.earR, with: .color(fur.earIn))
-        stroke(&ctx, Shapes.head, Shapes.outline, 2.6)
-        let blush = Color(hex: 0xFF8FB1).opacity(fur.blush)
-        ctx.fill(ellipse(27, 67, 6, 3.4), with: .color(blush))
-        ctx.fill(ellipse(73, 67, 6, 3.4), with: .color(blush))
-        if happy {
-            stroke(&ctx, Shapes.happyEyes, Shapes.outline, 2.8)
-        } else {
-            let rx: CGFloat = bigEyes ? 8 : 6.6
-            let ry: CGFloat = bigEyes ? 9 : 7.6
-            for cx in [CGFloat(36), CGFloat(64)] {
-                let iris = ellipse(cx, 56, rx, ry)
-                ctx.fill(iris, with: .color(fur.eye))
-                ctx.stroke(iris, with: .color(Shapes.outline), lineWidth: 1.3)
-                ctx.fill(ellipse(cx, 56.5, rx * 0.56, ry * 0.8), with: .color(Color(hex: 0x2A2230)))
-                let r: CGFloat = bigEyes ? 2.7 : 2.2
-                ctx.fill(ellipse(cx + 2.2, 52.6, r, r), with: .color(.white))
-                ctx.fill(ellipse(cx - 2, 59.5, 1, 1), with: .color(.white))
+        if fur.pattern != 3 {
+            if fur.dark {
+                ctx.fill(Shapes.muzzle, with: .color(Color(hex: 0x4C424A)))
+            } else {
+                ctx.fill(Shapes.muzzle, with: .color(Color.white.opacity(0.55)))
             }
         }
-        ctx.fill(Shapes.nose, with: .color(Color(hex: 0xF38AA6)))
-        ctx.stroke(Shapes.nose, with: .color(Color(hex: 0xC75F7E)), style: StrokeStyle(lineWidth: 1, lineJoin: .round))
-        stroke(&ctx, Shapes.mouth, fur.mouth, 2)
-        stroke(&ctx, Shapes.whiskers, fur.whisker, 1.6)
+        stroke(&ctx, Shapes.head, Shapes.outline, 2.4)
+        let blushStrength = fur.dark ? 0.55 : 0.6
+        blush(&ctx, 26, 69, strength: blushStrength)
+        blush(&ctx, 74, 69, strength: blushStrength)
+        if happy {
+            stroke(&ctx, Shapes.happyEyes, Shapes.outline, 2.6)
+        } else {
+            let rx: CGFloat = bigEyes ? 6 : 4.4
+            let ry: CGFloat = bigEyes ? 7 : 5.4
+            let shine: CGFloat = bigEyes ? 2.3 : 1.8
+            let sparkle: CGFloat = bigEyes ? 1.1 : 0.85
+            let eyeColor = fur.dark ? Color(hex: 0x1E1A1E) : Color(hex: 0x3B2C2A)
+            for cx in [CGFloat(36), CGFloat(64)] {
+                let eye = ellipse(cx, 58, rx, ry)
+                ctx.fill(eye, with: .color(eyeColor))
+                if fur.dark {
+                    ctx.stroke(eye, with: .color(Color(hex: 0xE9D9A6)), lineWidth: 1)
+                }
+                ctx.fill(ellipse(cx + 1.5, 55.6, shine, shine), with: .color(.white))
+                ctx.fill(ellipse(cx - 1.6, 60.8, sparkle, sparkle), with: .color(.white))
+            }
+        }
+        if lashes {
+            stroke(&ctx, Shapes.lashes, Shapes.outline, 1.7)
+        }
+        ctx.fill(Shapes.nose, with: .color(Color(hex: 0xF49AAE)))
+        ctx.stroke(Shapes.nose, with: .color(Color(hex: 0xC9677F)), style: StrokeStyle(lineWidth: 0.9, lineJoin: .round))
+        let mouthColor = fur.dark && fur.pattern != 3 ? Color(hex: 0xE9DDE6) : Shapes.outline
+        stroke(&ctx, Shapes.mouth, mouthColor, 1.8)
+        stroke(&ctx, Shapes.whiskers, fur.whisker, 1.4)
     }
 
     /// 100×100 の座標で描いて、size に合わせて拡大する
@@ -178,18 +232,15 @@ enum CatPainter {
         ctx.translateBy(x: (size.width - 100 * scale) / 2, y: (size.height - 100 * scale) / 2)
         ctx.scaleBy(x: scale, y: scale)
 
-        if kind == joker {
-            face(&ctx, fur: furs[0], bigEyes: false, happy: true)
-            stroke(&ctx, Shapes.manekiCollar, Color(hex: 0xE0434C), 5.5)
-            ctx.fill(ellipse(50, 91, 5.4, 5.4), with: .color(Color(hex: 0xF6C33B)))
-            ctx.stroke(ellipse(50, 91, 5.4, 5.4), with: .color(Color(hex: 0x9B6B00)), lineWidth: 1.3)
-            let paw = ellipse(11, 43, 9, 11)
-            ctx.fill(paw, with: .color(.white))
-            ctx.stroke(paw, with: .color(Shapes.outline), lineWidth: 2.2)
-            let pad = Color(hex: 0xFF9FBD)
-            ctx.fill(ellipse(11, 47, 3.6, 2.8), with: .color(pad))
-            for p in [CGPoint(x: 7.2, y: 40.5), CGPoint(x: 11, y: 38.6), CGPoint(x: 14.8, y: 40.5)] {
-                ctx.fill(ellipse(p.x, p.y, 1.6, 1.6), with: .color(pad))
+        if kind == joker { // 招き猫：にっこり目、赤い首輪と鈴、上げた手
+            face(&ctx, fur: furs[0], happy: true)
+            stroke(&ctx, Shapes.manekiCollar, Color(hex: 0xE5525C), 5.2)
+            bell(&ctx, 50, 90.5, 5.2)
+            fillOutlined(&ctx, Shapes.manekiPaw, Color(hex: 0xFFF8EC), 2.2)
+            let pad = Color(hex: 0xFFA9BF)
+            ctx.fill(ellipse(11, 43.5, 3.6, 3), with: .color(pad))
+            for p in [CGPoint(x: 7, y: 37.8), CGPoint(x: 11, y: 35.8), CGPoint(x: 15, y: 37.8)] {
+                ctx.fill(ellipse(p.x, p.y, 1.6, 1.8), with: .color(pad))
             }
             return
         }
@@ -199,28 +250,23 @@ enum CatPainter {
         switch roleOf(kind) {
         case 2: // 子猫：顔が小さく目が大きい。首に鈴
             var small = ctx
-            small.translateBy(x: 8, y: 9.9)
+            small.translateBy(x: 8, y: 7.5)
             small.scaleBy(x: 0.84, y: 0.84)
-            face(&small, fur: fur, bigEyes: true, happy: false)
-            stroke(&ctx, Shapes.kittenCollar, accent, 4.5)
-            ctx.fill(ellipse(50, 90, 5, 5), with: .color(Color(hex: 0xF6C33B)))
-            ctx.stroke(ellipse(50, 90, 5, 5), with: .color(Color(hex: 0x9B6B00)), lineWidth: 1.3)
+            face(&small, fur: fur, bigEyes: true)
+            stroke(&ctx, Shapes.kittenCollar, accent, 4.4)
+            bell(&ctx, 50, 89.5, 4.8)
         case 0: // パパ：蝶ネクタイ
-            face(&ctx, fur: fur, bigEyes: false, happy: false)
-            for p in [Shapes.bowL, Shapes.bowR] {
-                ctx.fill(p, with: .color(accent))
-                ctx.stroke(p, with: .color(Shapes.outline), style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
-            }
-            let knot = Path(roundedRect: CGRect(x: 46, y: 87, width: 8, height: 8), cornerRadius: 2.2)
-            ctx.fill(knot, with: .color(accent))
-            ctx.stroke(knot, with: .color(Shapes.outline), lineWidth: 1.6)
+            face(&ctx, fur: fur)
+            fillOutlined(&ctx, Shapes.bowL, accent)
+            fillOutlined(&ctx, Shapes.bowR, accent)
+            fillOutlined(&ctx, ellipse(50, 91.5, 3.8, 4), accent)
+            stroke(&ctx, Shapes.bowFolds, Shapes.outline.opacity(0.5), 1)
         default: // ママ：リボンとまつげ
-            face(&ctx, fur: fur, bigEyes: false, happy: false)
-            for p in [Shapes.ribbonL, Shapes.ribbonR, ellipse(68, 24, 3.4, 3.4)] {
-                ctx.fill(p, with: .color(accent))
-                ctx.stroke(p, with: .color(Shapes.outline), style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
-            }
-            stroke(&ctx, Shapes.lashes, Shapes.outline, 1.8)
+            face(&ctx, fur: fur, lashes: true)
+            stroke(&ctx, Shapes.ribbonTails, accent, 3)
+            fillOutlined(&ctx, Shapes.ribbonL, accent)
+            fillOutlined(&ctx, Shapes.ribbonR, accent)
+            fillOutlined(&ctx, ellipse(70, 22.5, 3.2, 3.2), accent)
         }
     }
 }
