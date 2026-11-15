@@ -235,7 +235,7 @@ enum CatPainter {
         if kind == joker { // 招き猫：にっこり目、赤い首輪と鈴、上げた手
             face(&ctx, fur: furs[0], happy: true)
             stroke(&ctx, Shapes.manekiCollar, Color(hex: 0xE5525C), 5.2)
-            bell(&ctx, 50, 90.5, 5.2)
+            bell(&ctx, 50, 91, 6.8)
             fillOutlined(&ctx, Shapes.manekiPaw, Color(hex: 0xFFF8EC), 2.2)
             let pad = Color(hex: 0xFFA9BF)
             ctx.fill(ellipse(11, 43.5, 3.6, 3), with: .color(pad))
@@ -254,19 +254,25 @@ enum CatPainter {
             small.scaleBy(x: 0.84, y: 0.84)
             face(&small, fur: fur, bigEyes: true)
             stroke(&ctx, Shapes.kittenCollar, accent, 4.4)
-            bell(&ctx, 50, 89.5, 4.8)
+            bell(&ctx, 50, 90.5, 6.6)
         case 0: // パパ：蝶ネクタイ
             face(&ctx, fur: fur)
             fillOutlined(&ctx, Shapes.bowL, accent)
             fillOutlined(&ctx, Shapes.bowR, accent)
             fillOutlined(&ctx, ellipse(50, 91.5, 3.8, 4), accent)
             stroke(&ctx, Shapes.bowFolds, Shapes.outline.opacity(0.5), 1)
-        default: // ママ：リボンとまつげ
+        default: // ママ：リボンとまつげ（リボンは結び目を中心に大きめに描く）
             face(&ctx, fur: fur, lashes: true)
-            stroke(&ctx, Shapes.ribbonTails, accent, 3)
-            fillOutlined(&ctx, Shapes.ribbonL, accent)
-            fillOutlined(&ctx, Shapes.ribbonR, accent)
-            fillOutlined(&ctx, ellipse(70, 22.5, 3.2, 3.2), accent)
+            let ribbon = familyOf(kind) == 3 ? Color(hex: 0xE04A4F) : accent // 茶トラは赤いリボン
+            let k: CGFloat = 1.4
+            var r = ctx
+            r.translateBy(x: 70, y: 22.5)
+            r.scaleBy(x: k, y: k)
+            r.translateBy(x: -70, y: -22.5)
+            stroke(&r, Shapes.ribbonTails, ribbon, 3 / k)
+            fillOutlined(&r, Shapes.ribbonL, ribbon, 1.6 / k)
+            fillOutlined(&r, Shapes.ribbonR, ribbon, 1.6 / k)
+            fillOutlined(&r, ellipse(70, 22.5, 3.2, 3.2), ribbon, 1.6 / k)
         }
     }
 }
