@@ -163,7 +163,7 @@ struct MatchResultCard: View {
     var onLesson: () -> Void = {}
 
     var body: some View {
-        ModalCard {
+        ModalCard(spacing: 10) {
             switch reward {
             case .tutorial:
                 Stamp(text: "クリア！")
@@ -228,7 +228,7 @@ struct MatchResultCard: View {
     }
 
     private func header(_ place: Int) -> some View {
-        RubyText(place == 0 ? "やったね！ 1位《い》！" : "キミは\(place + 1)位《い》", size: 24, display: true, alignment: .center)
+        RubyText(place == 0 ? "やったね！ 1位《い》！" : "キミは\(place + 1)位《い》", size: 21, display: true, alignment: .center)
     }
 
     private var podium: some View {
@@ -239,15 +239,15 @@ struct MatchResultCard: View {
                     Text("\(item.offset + 1)")
                         .font(AppFont.display(13))
                         .foregroundColor(item.offset == 0 ? Palette.onGold : Palette.ink)
-                        .frame(width: 26, height: 26)
+                        .frame(width: 22, height: 22)
                         .background(Circle().fill(item.offset == 0 ? Palette.gold : Palette.lavender))
-                    Avatar(kind: p.avatar, size: 26)
-                    RubyText(p.name, size: 14, bold: true)
+                    Avatar(kind: p.avatar, size: 22)
+                    RubyText(p.name, size: 13, bold: true)
                     Spacer(minLength: 0)
-                    RubyText("\(p.score)点《てん》", size: 14, bold: true)
+                    RubyText("\(p.score)点《てん》", size: 13, bold: true)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.vertical, 3)
                 .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(p.isHuman ? Palette.surface : Palette.surface2))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(p.isHuman ? Palette.pink : Palette.line, lineWidth: 2))
             }
@@ -280,7 +280,7 @@ struct MatchResultCard: View {
                 HStack(spacing: 2) {
                     ForEach(0..<r.need, id: \.self) { i in
                         Text("★")
-                            .font(.system(size: 24))
+                            .font(.system(size: 18))
                             .foregroundColor(i < r.stars ? Palette.goldPress : Palette.lineStrong)
                     }
                 }
@@ -331,8 +331,8 @@ struct ReviewSection: View {
 
     var body: some View {
         let t = review.tally
-        VStack(alignment: .leading, spacing: 8) {
-            RubyText("ふりかえり", size: 16, display: true)
+        VStack(alignment: .leading, spacing: 6) {
+            RubyText("ふりかえり", size: 15, display: true)
             if t.total > 0 {
                 HStack {
                     RubyText("ベストな捨《す》て方《かた》", size: 13, bold: true)
@@ -352,7 +352,8 @@ struct ReviewSection: View {
                 MissionChips(missions: review.missions.map { Missions.def($0) })
             }
         }
-        .padding(14)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .frame(maxWidth: 380, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Palette.surface2))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Palette.line, lineWidth: 2))

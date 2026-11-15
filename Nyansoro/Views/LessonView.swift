@@ -109,7 +109,7 @@ struct LessonPointsPage: View {
         let win = scoreWin(tiles, tsumo: e.tsumo)
         let total = win?.total ?? 0
         return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .bottom, spacing: 4) {
                 Text("\(total)")
                     .font(AppFont.display(26))
                     .foregroundColor(total >= 30 ? Palette.pinkInk : Palette.ink)
