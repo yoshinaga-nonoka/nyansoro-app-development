@@ -53,6 +53,9 @@ start "$PHONE"
 xcrun simctl ui "$PHONE" appearance light
 shoot "$PHONE" iphone tutorial game claim help settings round-result near-miss match-result rankup ranks title revive daily-result streak
 WAIT=20 shoot "$PHONE" iphone ad-test
+# 広告のプライバシー：年齢の確認・設定の「広告とプライバシー」・追跡の確認・欧州の同意画面（Services/AdPrivacy.swift）
+shoot "$PHONE" iphone age-check privacy privacy-child
+WAIT=15 shoot "$PHONE" iphone att-prompt consent-eea
 xcrun simctl ui "$PHONE" appearance dark
 shoot "$PHONE" iphone-dark title game round-result
 xcrun simctl shutdown "$PHONE" || true

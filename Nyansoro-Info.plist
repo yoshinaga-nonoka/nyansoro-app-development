@@ -5,6 +5,9 @@
 	<!-- AdMob のアプリ ID -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-9015776457528965~2088043952</string>
+	<!-- 追跡の許可（App Tracking Transparency）を聞くときに出る説明 -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>あなたに合った広告を表示するために使います。許可しなくても、ゲームはすべて遊べます。</string>
 	<!-- 広告の効果測定（SKAdNetwork）。Google 推奨の一覧（50件、先頭が Google 本体）。
 	     出典：https://developers.google.com/admob/ios/3p-skadnetworks（2026-11-15 時点） -->
 	<key>SKAdNetworkItems</key>

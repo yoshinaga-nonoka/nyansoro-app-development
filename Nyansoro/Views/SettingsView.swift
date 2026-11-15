@@ -7,6 +7,7 @@ struct SettingsView: View {
     var allowReset = true
     @Environment(\.dismiss) private var dismiss
     @State private var confirmReset = false
+    @ObservedObject private var privacy = AdPrivacy.shared
 
     var body: some View {
         ScrollView {
@@ -52,6 +53,9 @@ struct SettingsView: View {
                     }
                 }
 
+                PrivacyLinkRow(title: "広告《こうこく》とプライバシー", note: "年齢《ねんれい》・追跡《ついせき》の許可《きょか》・プライバシーポリシー") { AdPrivacy.shared.showSettings = true }
+                    .padding(.top, 8)
+
                 if allowReset {
                     resetArea
                         .padding(.top, 12)
@@ -62,6 +66,10 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Palette.bg.ignoresSafeArea())
+        .sheet(isPresented: $privacy.showSettings) {
+            PrivacySettingsView()
+                .environment(\.furigana, app.settings.furigana)
+        }
     }
 
     /// オンにしたときは通知の許可を聞く
