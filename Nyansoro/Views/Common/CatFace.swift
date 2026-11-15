@@ -95,7 +95,6 @@ private enum Shapes {
     static let bowFolds = SVGPath.parse("M38.5 88.5 C40.5 90 40.5 93 38.5 94.5 M61.5 88.5 C59.5 90 59.5 93 61.5 94.5")
     static let ribbonL = SVGPath.parse("M70 22 C64 12 55 15 57.5 22.5 C59.5 28 65.5 26.5 70 22 Z")
     static let ribbonR = SVGPath.parse("M70 22 C73 11 82.5 11 82.5 18.5 C82.5 25 74.5 26 70 22 Z")
-    static let ribbonTails = SVGPath.parse("M68.5 24 C67 28 65.5 30.5 63.5 32 M71.5 24 C73.5 27.5 75.5 29.5 78 30.5")
     static let kittenCollar = SVGPath.parse("M30 81.5 C40 87.5 60 87.5 70 81.5")
     static let manekiCollar = SVGPath.parse("M28 82.5 C40 89.5 60 89.5 72 82.5")
     static let manekiPaw = SVGPath.parse("M3 52 C1 44 2 35 8 31 C13 28 19 31 20 37 C21 43 20 49 17 54 Z")
@@ -261,15 +260,15 @@ enum CatPainter {
             fillOutlined(&ctx, Shapes.bowR, accent)
             fillOutlined(&ctx, ellipse(50, 91.5, 3.8, 4), accent)
             stroke(&ctx, Shapes.bowFolds, Shapes.outline.opacity(0.5), 1)
-        default: // ママ：リボンとまつげ（リボンは結び目を中心に大きめに描く）
+        default: // ママ：リボンとまつげ（リボンは右耳の根元に沿わせて、大きめに描く）
             face(&ctx, fur: fur, lashes: true)
             let ribbon = familyOf(kind) == 3 ? Color(hex: 0xE04A4F) : accent // 茶トラは赤いリボン
             let k: CGFloat = 1.4
             var r = ctx
-            r.translateBy(x: 70, y: 22.5)
+            r.translateBy(x: 70, y: 27)
+            r.rotate(by: .degrees(27))
             r.scaleBy(x: k, y: k)
             r.translateBy(x: -70, y: -22.5)
-            stroke(&r, Shapes.ribbonTails, ribbon, 3 / k)
             fillOutlined(&r, Shapes.ribbonL, ribbon, 1.6 / k)
             fillOutlined(&r, Shapes.ribbonR, ribbon, 1.6 / k)
             fillOutlined(&r, ellipse(70, 22.5, 3.2, 3.2), ribbon, 1.6 / k)
