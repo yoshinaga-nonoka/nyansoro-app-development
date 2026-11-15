@@ -114,6 +114,8 @@ public enum Feedback {
         guard let r = s.result else { return nil }
         let me = s.players[seat]
         if r.winner == seat, let win = r.win {
+            if win.items.contains(ScoreTable.oneFamily) { return "ひと家族《かぞく》だらけ！ 大物《おおもの》！" }
+            if win.items.contains(ScoreTable.ippatsu) { return "リーチして、すぐにゃん！ 気持《きも》ちいい！" }
             if win.items.contains(ScoreTable.allSame) { return "全部《ぜんぶ》同《おな》じ猫《ねこ》！ お見事《みごと》！" }
             if win.items.contains(ScoreTable.allFamily) { return "家族《かぞく》が全員《ぜんいん》集合《しゅうごう》！ すごい！" }
             let streak = s.history.reversed().prefix { $0.winner == seat }.count
