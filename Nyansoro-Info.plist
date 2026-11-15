@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- AdMob のアプリ ID -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-9015776457528965~2088043952</string>
+	<!-- 広告の効果測定（SKAdNetwork）。公開前に Google 推奨の一覧をすべて足す -->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
+</dict>
+</plist>

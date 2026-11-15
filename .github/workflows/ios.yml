@@ -24,8 +24,13 @@ jobs:
       - name: シミュレーター向けにビルド
         run: |
           set -o pipefail
-          xcodebuild -project Nyansoro.xcodeproj -target Nyansoro -sdk iphonesimulator \
-            -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log
+          xcodebuild -project Nyansoro.xcodeproj -scheme Nyansoro -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log
+      - name: リリース用もビルド（広告 ID が空でも通るか）
+        run: |
+          set -o pipefail
+          xcodebuild -project Nyansoro.xcodeproj -scheme Nyansoro -destination 'generic/platform=iOS Simulator' \
+            -configuration Release -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build 2>&1 | tee -a build.log
       - name: エラーだけ抜き出す
         if: failure()
         run: |

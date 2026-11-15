@@ -4,12 +4,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP=build/Debug-iphonesimulator/Nyansoro.app
+APP=build/dd/Build/Products/Debug-iphonesimulator/Nyansoro.app
 mkdir -p shots
 
 echo "== ビルド"
-xcodebuild -project Nyansoro.xcodeproj -target Nyansoro -sdk iphonesimulator -configuration Debug \
-  CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO build > build.log 2>&1 || { grep -E "error:" build.log | sort -u | head -50; exit 1; }
+xcodebuild -project Nyansoro.xcodeproj -scheme Nyansoro -destination 'generic/platform=iOS Simulator' -configuration Debug \
+  -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { grep -E "error:" build.log | sort -u | head -50; exit 1; }
 
 # アプリの ID（Xcode で Bundle Identifier を変えても動くように、ビルドしたアプリから読む）
 BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")

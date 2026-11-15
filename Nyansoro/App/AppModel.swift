@@ -44,8 +44,14 @@ final class AppModel: ObservableObject {
     @Published var showSettings = false
     @Published var showOnline = false
 
-    /// 開発用ビルドではダミー広告、それ以外は広告なし（AdMob を入れたらここを差し替える）
+    /// 広告。AdMob が入っていれば AdMob（開発用はテスト広告）、なければ開発用ビルドだけダミー広告
     let debugAds = DebugAdService()
+    #if canImport(GoogleMobileAds)
+    private lazy var admob = AdMobAdService()
+    var ads: AdService? {
+        AdConfig.enabled ? admob : nil
+    }
+    #else
     var ads: AdService? {
         #if DEBUG
         return debugAds
@@ -53,6 +59,7 @@ final class AppModel: ObservableObject {
         return nil
         #endif
     }
+    #endif
 
     #if DEBUG
     /// 開発用：場面指定（DebugScenarios.swift）で使う、対戦の最初の状態
