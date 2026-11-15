@@ -234,7 +234,7 @@ enum CatPainter {
         if kind == joker { // 招き猫：にっこり目、赤い首輪と鈴、上げた手
             face(&ctx, fur: furs[0], happy: true)
             stroke(&ctx, Shapes.manekiCollar, Color(hex: 0xE5525C), 5.2)
-            bell(&ctx, 50, 91, 6.8)
+            bell(&ctx, 50, 91.5, 8.2)
             fillOutlined(&ctx, Shapes.manekiPaw, Color(hex: 0xFFF8EC), 2.2)
             let pad = Color(hex: 0xFFA9BF)
             ctx.fill(ellipse(11, 43.5, 3.6, 3), with: .color(pad))
@@ -253,7 +253,7 @@ enum CatPainter {
             small.scaleBy(x: 0.84, y: 0.84)
             face(&small, fur: fur, bigEyes: true)
             stroke(&ctx, Shapes.kittenCollar, accent, 4.4)
-            bell(&ctx, 50, 90.5, 6.6)
+            bell(&ctx, 50, 88.5, 8)
         case 0: // パパ：蝶ネクタイ
             face(&ctx, fur: fur)
             fillOutlined(&ctx, Shapes.bowL, accent)
