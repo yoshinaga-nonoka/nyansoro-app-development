@@ -254,16 +254,21 @@ enum CatPainter {
             face(&small, fur: fur, bigEyes: true)
             stroke(&ctx, Shapes.kittenCollar, accent, 4.4)
             bell(&ctx, 50, 88.5, 8)
-        case 0: // パパ：蝶ネクタイ
+        case 0: // パパ：蝶ネクタイ（大きめにして、あごに少し重ねる）
             face(&ctx, fur: fur)
-            fillOutlined(&ctx, Shapes.bowL, accent)
-            fillOutlined(&ctx, Shapes.bowR, accent)
-            fillOutlined(&ctx, ellipse(50, 91.5, 3.8, 4), accent)
-            stroke(&ctx, Shapes.bowFolds, Shapes.outline.opacity(0.5), 1)
+            let k: CGFloat = 1.5
+            var b = ctx
+            b.translateBy(x: 50, y: 88)
+            b.scaleBy(x: k, y: k)
+            b.translateBy(x: -50, y: -91.5)
+            fillOutlined(&b, Shapes.bowL, accent, 1.6 / k)
+            fillOutlined(&b, Shapes.bowR, accent, 1.6 / k)
+            fillOutlined(&b, ellipse(50, 91.5, 3.8, 4), accent, 1.6 / k)
+            stroke(&b, Shapes.bowFolds, Shapes.outline.opacity(0.5), 1 / k)
         default: // ママ：リボンとまつげ（リボンは右耳の根元に沿わせて、大きめに描く）
             face(&ctx, fur: fur, lashes: true)
             let ribbon = familyOf(kind) == 3 ? Color(hex: 0xE04A4F) : accent // 茶トラは赤いリボン
-            let k: CGFloat = 1.4
+            let k: CGFloat = 2.1
             var r = ctx
             r.translateBy(x: 70, y: 27)
             r.rotate(by: .degrees(27))
