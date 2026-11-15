@@ -41,7 +41,7 @@ shoot() {
   for sc in "$@"; do
     xcrun simctl terminate "$U" "$BID" > /dev/null 2>&1 || true
     xcrun simctl launch "$U" "$BID" -scenario "$sc" > /dev/null
-    sleep 7
+    sleep "${WAIT:-7}"
     xcrun simctl io "$U" screenshot "shots/$P-$sc.png" > /dev/null 2>&1
     echo "  shots/$P-$sc.png"
   done
@@ -52,6 +52,7 @@ echo "== iPhone ($PHONE)"
 start "$PHONE"
 xcrun simctl ui "$PHONE" appearance light
 shoot "$PHONE" iphone tutorial game claim help settings round-result near-miss match-result rankup ranks title revive daily-result streak
+WAIT=20 shoot "$PHONE" iphone ad-test
 xcrun simctl ui "$PHONE" appearance dark
 shoot "$PHONE" iphone-dark title game round-result
 xcrun simctl shutdown "$PHONE" || true

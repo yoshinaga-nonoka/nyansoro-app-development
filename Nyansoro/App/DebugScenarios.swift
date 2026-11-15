@@ -14,6 +14,8 @@ enum DebugScenario: String, CaseIterable {
     case revive
     case nearMiss = "near-miss"
     case dailyResult = "daily-result"
+    /// 起動して少ししたらリワード広告を出す（AdMob のテスト広告が出るかの確認）
+    case adTest = "ad-test"
 
     static var current: DebugScenario? {
         let args = ProcessInfo.processInfo.arguments
@@ -112,6 +114,11 @@ extension AppModel {
             save.daily = nil
             let mode = GameMode.daily(day: today)
             startGame(DemoStates.play(mode: mode, seeds: 1...1) { $0.phase == .matchEnd }, mode: mode)
+        case .adTest:
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                _ = await self.ads?.showRewarded()
+            }
         case .rankup:
             save.progress.rank = 0
             save.progress.stars = 2
