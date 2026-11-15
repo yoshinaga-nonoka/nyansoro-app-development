@@ -20,6 +20,21 @@ enum DebugScenario: String, CaseIterable {
     case missions
     /// 遊び方の「猫」タブ（猫の絵柄19種類の確認用）
     case helpCats = "help-cats"
+    /// 遊び方の「役」タブ
+    case helpYaku = "help-yaku"
+    /// 初回の説明（ようこそ・パパママ子猫・リーチと役）
+    case onboarding
+    case onboardingSignIn = "onboarding-signin"
+    case onboardingRoles = "onboarding-roles"
+    case onboardingRiichi = "onboarding-riichi"
+    /// 練習の一覧
+    case practice
+    /// 練習「リーチして上がろう」でリーチボタンが出たところ
+    case tutorialRiichi = "tutorial-riichi"
+    /// 練習「役を作って点数を上げよう」のクリア画面
+    case tutorialClear = "tutorial-clear"
+    /// CPU対戦：リーチ中に、人の捨てた猫で上がれるところ
+    case riichi
 
     static var current: DebugScenario? {
         let args = ProcessInfo.processInfo.arguments
@@ -31,7 +46,7 @@ enum DebugScenario: String, CaseIterable {
 enum DemoStates {
     /// 起動を速くするため、場面ごとに当たりの種を決めてある（変えたら seeds を探し直す）
     /// 決まった種で CPU対戦を始め、自分はおすすめを捨てながら、stop が true になるまで進める
-    static func play(mode: GameMode = .cpu(rank: 0), seeds: ClosedRange<UInt32> = 1...200, until stop: (GameState) -> Bool) -> GameState? {
+    static func play(mode: GameMode = .cpu(rank: 0), seeds: ClosedRange<UInt32> = 1...200, riichi: Bool = false, until stop: (GameState) -> Bool) -> GameState? {
         for seed in seeds {
             var s = GameController.makeState(mode: mode, seed: seed)
             var r = Mulberry32(seed: seed &+ 7)
@@ -45,9 +60,13 @@ enum DemoStates {
                     let p = s.players[s.current]
                     if canWin(p.hand) {
                         a = .tsumo
+                    } else if p.isHuman, p.riichi, let d = s.drawn {
+                        a = .discard(tileId: d.id)
                     } else if p.isHuman, let best = discardOptions(s, 0).min(by: { $0.dist < $1.dist }), let t = p.hand.last(where: { $0.kind == best.kind }) {
                         // 起動を速くするため、おすすめ（残り枚数の計算）は使わない
-                        a = .discard(tileId: t.id)
+                        a = riichi && s.canRiichi(seat: 0, discarding: t.id) ? .riichi(tileId: t.id) : .discard(tileId: t.id)
+                    } else if riichi {
+                        a = chooseAction(s, s.current, level: 2, rand: { r.nextUnit() })
                     } else {
                         a = .discard(tileId: chooseDiscard(s, s.current, level: 2, rand: { r.nextUnit() }))
                     }
@@ -64,12 +83,55 @@ enum DemoStates {
         }
         return nil
     }
+
+    /// 練習を台本どおり（おすすめを捨てる・リーチの練習ではリーチ）に、stop が true になるまで進める
+    static func playTutorial(_ task: TutorialTask, until stop: (GameState) -> Bool) -> GameState? {
+        var s = GameController.makeState(mode: .tutorial(task), seed: 1)
+        var cpuScript = task == .basics
+        for _ in 0..<1000 {
+            if stop(s) { return s }
+            switch s.phase {
+            case .draw:
+                s.apply(.draw)
+            case .discard:
+                let p = s.players[s.current]
+                if s.current == 0 {
+                    if canWin(p.hand) { s.apply(.tsumo); continue }
+                    guard let rec = handInsight(s, seat: 0, recommendOn: true)?.rec, let t = p.hand.last(where: { $0.kind == rec }) else { return nil }
+                    s.apply(task == .riichi && s.canRiichi(seat: 0, discarding: t.id) ? .riichi(tileId: t.id) : .discard(tileId: t.id))
+                } else if cpuScript, s.current == 1, let t = p.hand.first(where: { $0.kind == Tutorial.winKind }) {
+                    cpuScript = false
+                    s.apply(.discard(tileId: t.id))
+                } else {
+                    s.apply(.discard(tileId: chooseDiscard(s, s.current, level: 1, rand: { 0.7 })))
+                }
+            case .claim:
+                let head = s.claimQueue[0]
+                s.apply(head == 0 ? .ron(player: 0) : .pass(player: head))
+            case .roundEnd:
+                s.apply(.nextRound)
+            case .matchEnd:
+                return stop(s) ? s : nil
+            }
+        }
+        return nil
+    }
 }
 
 extension AppModel {
     func applyDebugScenario(_ scenario: DebugScenario) {
         save.settings.sound = false
         save.settings.haptics = false
+        // 初回の説明の場面以外は、説明を見終えたことにしてホームから始める
+        let intro: Set<DebugScenario> = [.onboarding, .onboardingSignIn, .onboardingRoles, .onboardingRiichi]
+        if intro.contains(scenario) {
+            save.onboarding = OnboardingState()
+            screen = .onboarding
+        } else {
+            save.onboarding.introDone = true
+            save.onboarding.signInOffered = true
+            screen = .title
+        }
         func startGame(_ state: GameState?, mode: GameMode = .cpu(rank: 0)) {
             debugInitialState = state
             screen = .game(mode, UUID())
@@ -82,7 +144,24 @@ extension AppModel {
             save.progress.stars = 1
             screen = .ranks
         case .tutorial:
-            screen = .game(.tutorial, UUID())
+            screen = .game(.tutorial(.basics), UUID())
+        case .onboarding, .onboardingSignIn, .onboardingRoles, .onboardingRiichi:
+            break
+        case .practice:
+            save.tutorialTasks = [TutorialTask.basics.rawValue]
+            showPractice = true
+        case .tutorialRiichi:
+            debugTutorialStep = 20
+            debugSelectRecommended = true
+            startGame(DemoStates.playTutorial(.riichi) { $0.phase == .discard && $0.current == 0 && $0.players[0].hand.count == 9 }, mode: .tutorial(.riichi))
+        case .tutorialClear:
+            save.tutorialTasks = [TutorialTask.basics.rawValue, TutorialTask.riichi.rawValue]
+            startGame(DemoStates.playTutorial(.yaku) { $0.phase == .matchEnd }, mode: .tutorial(.yaku))
+        case .riichi:
+            save.settings.autoNyan = false
+            startGame(DemoStates.play(seeds: 1...1, riichi: true) { $0.phase == .claim && $0.claimQueue.first == 0 && $0.players[0].riichi })
+        case .helpYaku:
+            showHelp = true
         case .settings:
             showSettings = true
         case .game:

@@ -8,6 +8,9 @@ struct RootView: View {
     var body: some View {
         ZStack {
             switch app.screen {
+            case .onboarding:
+                OnboardingView(app: app)
+                    .transition(.opacity)
             case .title:
                 TitleView(app: app)
                     .transition(.opacity)
@@ -39,7 +42,16 @@ struct RootView: View {
         }
         .environment(\.furigana, app.settings.furigana)
         .sheet(isPresented: $app.showHelp) {
-            HelpView(game: nil)
+            HelpView(game: nil, onReplayIntro: { app.replayIntro() })
+                .environment(\.furigana, app.settings.furigana)
+        }
+        .sheet(isPresented: $app.showPractice) {
+            PracticeView()
+                .environmentObject(app)
+                .environment(\.furigana, app.settings.furigana)
+        }
+        .fullScreenCover(isPresented: $app.showIntro) {
+            OnboardingView(app: app, replay: true)
                 .environment(\.furigana, app.settings.furigana)
         }
         .sheet(isPresented: $app.showLesson) {

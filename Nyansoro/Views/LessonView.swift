@@ -71,6 +71,7 @@ struct LessonPointsPage: View {
     private struct Example {
         let kinds: [Int]
         let tsumo: Bool
+        var riichi = false
         let note: String
     }
 
@@ -78,12 +79,14 @@ struct LessonPointsPage: View {
         Example(kinds: [0, 0, 0, 3, 4, 5, 8, 8, joker], tsumo: false, note: "人《ひと》が捨《す》てた猫《ねこ》で、招《まね》き猫《ねこ》を使《つか》って上《あ》がり"),
         Example(kinds: [0, 0, 0, 3, 4, 5, 8, 8, 8], tsumo: true, note: "自分《じぶん》で引《ひ》いて、招《まね》き猫《ねこ》なし"),
         Example(kinds: [0, 1, 2, 3, 4, 5, 6, 7, 8], tsumo: false, note: "全部《ぜんぶ》家族《かぞく》で、招《まね》き猫《ねこ》なし"),
-        Example(kinds: [0, 0, 0, 3, 3, 3, 6, 6, 6], tsumo: true, note: "全部《ぜんぶ》同《おな》じ猫《ねこ》＋招《まね》き猫《ねこ》なし＋自分《じぶん》で引《ひ》く"),
+        Example(kinds: [0, 1, 2, 3, 4, 5, 6, 7, 8], tsumo: false, riichi: true, note: "リーチしてから、人《ひと》が捨《す》てた猫《ねこ》で全部《ぜんぶ》家族《かぞく》"),
+        Example(kinds: [0, 0, 0, 3, 3, 3, 6, 6, 6], tsumo: true, note: "パパそろい（全部《ぜんぶ》同《おな》じ猫《ねこ》）＋招《まね》き猫《ねこ》なし＋自分《じぶん》で引《ひ》く"),
+        Example(kinds: [0, 1, 2, 3, 4, 5, 6, 7, 8], tsumo: true, riichi: true, note: "リーチ＋すぐにゃん＋自分《じぶん》で引《ひ》く＋全部《ぜんぶ》家族《かぞく》"),
     ]
 
     var body: some View {
         RubyText("① 点数《てんすう》の稼《かせ》ぎ方《かた》", size: 19, display: true)
-        RubyText("上《あ》がるだけで**10点《てん》**。ボーナスを重《かさ》ねると**最大《さいだい》30点《てん》**！ 1位《い》になるには、速《はや》く上《あ》がるか、高《たか》い点《てん》で上《あ》がるか。", size: 14)
+        RubyText("上《あ》がるだけで**10点《てん》**。**リーチ**や**役《やく》**を重《かさ》ねると、40点《てん》以上《いじょう》も狙《ねら》える！ 1位《い》になるには、速《はや》く上《あ》がるか、高《たか》い点《てん》で上《あ》がるか。", size: 14)
         VStack(spacing: 4) {
             ForEach(ScoreTable.all, id: \.self) { item in
                 HStack {
@@ -97,7 +100,7 @@ struct LessonPointsPage: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Palette.surface2))
-        RubyText("「全部《ぜんぶ》同《おな》じ猫《ねこ》」と「全部《ぜんぶ》家族《かぞく》」は、どちらか一方《いっぽう》だけ。", size: 12, color: Palette.inkSoft)
+        RubyText("「全部《ぜんぶ》同《おな》じ猫《ねこ》」と「全部《ぜんぶ》家族《かぞく》」は、どちらか一方《いっぽう》だけ。「すぐにゃん」はリーチしたときだけ。", size: 12, color: Palette.inkSoft)
 
         ForEach(Array(examples.enumerated()), id: \.offset) { item in
             exampleView(item.element)
@@ -106,14 +109,14 @@ struct LessonPointsPage: View {
 
     private func exampleView(_ e: Example) -> some View {
         let tiles = e.kinds.enumerated().map { Tile(id: 9_000 + $0.offset, kind: $0.element) }
-        let win = scoreWin(tiles, tsumo: e.tsumo)
+        let win = scoreWin(tiles, WinContext(tsumo: e.tsumo, riichi: e.riichi, ippatsu: e.riichi && e.tsumo))
         let total = win?.total ?? 0
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .bottom, spacing: 4) {
                 Text("\(total)")
                     .font(AppFont.display(26))
-                    .foregroundColor(total >= 30 ? Palette.pinkInk : Palette.ink)
-                RubyText(total >= 30 ? "点《てん》 満点《まんてん》！" : "点《てん》", size: 15, bold: true)
+                    .foregroundColor(total >= 40 ? Palette.pinkInk : Palette.ink)
+                RubyText(total >= 40 ? "点《てん》 大物《おおもの》！" : "点《てん》", size: 15, bold: true)
                 Spacer(minLength: 0)
             }
             RubyText(e.note, size: 13, color: Palette.inkSoft)
@@ -130,7 +133,7 @@ struct LessonPointsPage: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(total >= 30 ? Palette.goldPress : Palette.line, lineWidth: 2))
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(total >= 40 ? Palette.goldPress : Palette.line, lineWidth: 2))
     }
 }
 
@@ -141,9 +144,10 @@ struct LessonTipsPage: View {
         ("square.on.square", "**2枚《まい》ある猫《ねこ》は大事《だいじ》に。**あと1枚《まい》で「同《おな》じ猫《ねこ》」のセットになる。"),
         ("person.3", "**家族《かぞく》は2匹《ひき》そろったら3匹目《ひきめ》を待《ま》つ。**パパ・ママがいたら、子猫《こねこ》が来《く》ればセット。"),
         ("arrow.down.circle", "**バラバラの猫《ねこ》から捨《す》てる。**仲間《なかま》がいない猫《ねこ》は、揃《そろ》うまで時間《じかん》がかかる。"),
+        ("hand.raised", "**あと1枚《まい》ならリーチ。**上《あ》がれば +10点《てん》。待《ま》っている猫《ねこ》が少《すく》ない形《かたち》なら、言《い》わずにいい形《かたち》を待《ま》つのも手《て》。"),
         ("sparkles", "**招《まね》き猫《ねこ》は最後《さいご》の1枚《まい》に。**どこにでも入《はい》るけど、使《つか》わずに上《あ》がれば +5点《てん》。"),
         ("number", "**残《のこ》りの枚数《まいすう》を数《かぞ》える。**待《ま》っている猫《ねこ》の横《よこ》の数字《すうじ》は残《のこ》り枚数《まいすう》。多《おお》い方《ほう》が来《き》やすい。"),
-        ("eye", "**相手《あいて》の捨《す》てた猫《ねこ》を見《み》る。**ボス猫《ねこ》ランクからは、上《あ》がられると −5点《てん》。相手《あいて》があまり捨《す》てない家族《かぞく》は危《あぶ》ない。"),
+        ("eye", "**相手《あいて》の捨《す》てた猫《ねこ》を見《み》る。**ボス猫《ねこ》ランクからは、上《あ》がられると −5点《てん》。相手《あいて》があまり捨《す》てない家族《かぞく》と、リーチした人《ひと》は危《あぶ》ない。"),
         ("pawprint", "**肉球《にくきゅう》マークは「ベストな捨《す》て方《かた》」。**試合《しあい》のあとの「ふりかえり」で、ベストな捨《す》て方《かた》が90%を超《こ》えたら名人《めいじん》。"),
     ]
 

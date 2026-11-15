@@ -161,23 +161,46 @@ struct MatchResultCard: View {
     let onExit: () -> Void
     let onPlay: (GameMode) -> Void
     var onLesson: () -> Void = {}
+    /// クリアした練習
+    var clearedTasks: Set<TutorialTask> = []
 
     var body: some View {
         ModalCard(spacing: 10) {
             switch reward {
-            case .tutorial:
-                Stamp(text: "クリア！")
-                RubyText("練習《れんしゅう》クリア！", size: 22, display: true, alignment: .center)
-                RubyText("次《つぎ》は「上達《じょうたつ》レッスン」で、点数《てんすう》の稼《かせ》ぎ方《かた》とランクアップの道《みち》を見《み》てみよう。", size: 14, alignment: .center)
-                Button(action: onLesson) {
-                    RubyText("上達《じょうたつ》レッスンを見《み》る", size: 16, display: true, color: Palette.onGold)
+            case let .tutorial(task, cleared):
+                if cleared {
+                    Stamp(text: "クリア！")
+                    RubyText("練習《れんしゅう》クリア！", size: 22, display: true, alignment: .center)
+                    RubyText("「\(task.title)」ができた！", size: 14, alignment: .center)
+                } else {
+                    RubyText("おしい！", size: 22, display: true, alignment: .center)
+                    RubyText(task == .riichi ? "あと1枚《まい》になったら、**リーチ**ボタンで捨《す》ててから上《あ》がろう。" : task == .yaku ? "家族《かぞく》セットを3つ揃《そろ》えて上《あ》がろう。肉球《にくきゅう》マークが目印《めじるし》だよ。" : "にゃん！ボタンで上《あ》がろう。", size: 14, alignment: .center)
                 }
-                .buttonStyle(PillButtonStyle(kind: .nyan))
+                TutorialTaskList(current: task, cleared: clearedTasks)
+                if !cleared {
+                    Button { onPlay(mode) } label: {
+                        RubyText("もう一度《いちど》", size: 16, display: true, color: Palette.onPink)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .primary))
+                } else if let next = task.next {
+                    Button { onPlay(.tutorial(next)) } label: {
+                        RubyText("次《つぎ》の練習《れんしゅう》へ", size: 17, display: true, color: Palette.onGold)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .nyan))
+                } else {
+                    RubyText("全部《ぜんぶ》の練習《れんしゅう》をクリア！ 次《つぎ》は「上達《じょうたつ》レッスン」で、点数《てんすう》の稼《かせ》ぎ方《かた》とランクアップの道《みち》を見《み》てみよう。", size: 14, alignment: .center)
+                    Button(action: onLesson) {
+                        RubyText("上達《じょうたつ》レッスンを見《み》る", size: 16, display: true, color: Palette.onGold)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .nyan))
+                }
                 HStack(spacing: 10) {
-                    Button(action: onExit) { RubyText("タイトルへ", size: 16, display: true) }
+                    Button(action: onExit) { RubyText("ホームへ", size: 16, display: true) }
                         .buttonStyle(PillButtonStyle(kind: .ghost))
-                    Button { onPlay(.cpu(rank: 0)) } label: { RubyText("CPUと対戦《たいせん》", size: 16, display: true, color: Palette.onPink) }
-                        .buttonStyle(PillButtonStyle(kind: .primary))
+                    if cleared {
+                        Button { onPlay(.cpu(rank: currentRank)) } label: { RubyText("CPUと対戦《たいせん》", size: 16, display: true, color: Palette.onPink) }
+                            .buttonStyle(PillButtonStyle(kind: task.next == nil ? .primary : .ghost))
+                    }
                 }
             case let .daily(d):
                 if d.won { Stamp(text: "クリア！") }
@@ -298,6 +321,51 @@ struct MatchResultCard: View {
             }
             .buttonStyle(PillButtonStyle(kind: .primary))
         }
+    }
+}
+
+/// 練習（チュートリアルタスク）の一覧。クリアしたものに印
+struct TutorialTaskList: View {
+    var current: TutorialTask?
+    let cleared: Set<TutorialTask>
+    /// 押したら始める（nil なら押せない表示だけ）
+    var onStart: ((TutorialTask) -> Void)?
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(Array(TutorialTask.allCases.enumerated()), id: \.offset) { item in
+                let t = item.element
+                let done = cleared.contains(t)
+                let here = t == current
+                let row = HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: done ? "checkmark.circle.fill" : "\(item.offset + 1).circle")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(done ? Palette.ok : Palette.lineStrong)
+                    VStack(alignment: .leading, spacing: 2) {
+                        RubyText(t.title, size: 14, bold: true)
+                        RubyText(t.goal, size: 12, color: Palette.inkSoft)
+                    }
+                    Spacer(minLength: 0)
+                    if onStart != nil {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(Palette.pinkPress)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(here ? Palette.surface : Palette.surface2))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(here ? Palette.pink : Palette.line, lineWidth: 2))
+                if let onStart {
+                    Button { onStart(t) } label: { row }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(plainText(t.title) + (done ? "（クリア）" : ""))
+                } else {
+                    row.accessibilityElement(children: .combine)
+                }
+            }
+        }
+        .frame(maxWidth: 420)
     }
 }
 

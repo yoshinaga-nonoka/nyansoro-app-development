@@ -27,7 +27,11 @@
 プロジェクトファイルが壊れている場合は、ターミナルで `brew install xcodegen` → このフォルダで `xcodegen` を実行すると作り直せます（`project.yml`）。
 
 ## 入っている機能
-- 練習（決まった配牌で3手で上がれるチュートリアル）
+- 初めての起動：ホームの前に遊び方の説明（勝ち方・セット・パパ／ママ／子猫の見分け方・招き猫・順番・リーチと役）→ 練習へ。「？」の遊び方や「練習」から見直せる
+- 練習（チュートリアルタスク）3つ：「3枚セットで上がってみよう」「リーチして上がろう」「役を作って点数を上げよう」。決まった配牌で、CPU は上がらない
+- リーチ：あと1枚の形で宣言すると、手を変えられない代わりに上がれば +10点（言わなくても上がれる）
+- 役：自分で引いて上がり・リーチ・すぐにゃん・招き猫なし・全部同じ猫・全部家族・家族と兄弟・最後の1枚・パパ／ママ／子猫そろい・ひと家族だらけ（`NyansoroCore/Sources/NyansoroCore/Score.swift`）
+- Apple でサインイン（有料の Apple Developer Program が必要なので、今はオフ。下の「Apple でサインインを使う」）
 - CPU対戦（ランクアップ制）：子猫 → 家猫 → 野良猫 → ボス猫 → 猫神様
 - 「？」ボタン：遊び方。対戦中は「今の手」（揃ったセット・足りない猫・待っている猫）も見られる
 - ヒント（おすすめの肉球マーク・セットの線・あと何枚）、ふりがな、自動でにゃん！、音、振動、CPUの速さ、マット
@@ -55,8 +59,8 @@ NyansoroCore/             ルール本体（画面に依存しない Swift パ�
 ## ルールのテスト（ターミナル）
 ```bash
 cd NyansoroCore
-swift test                                   # ルールのテスト（19件）
-swift run -c release nyansoro-sim 150        # CPU の強さ（各ランクで1位になる割合）
+swift test                                   # ルールのテスト（39件）
+swift run -c release nyansoro-sim 150        # CPU の強さ（各ランクで1位になる割合）と1局の長さ
 ```
 
 ## 文章とふりがな
@@ -72,3 +76,16 @@ swift run -c release nyansoro-sim 150        # CPU の強さ（各ランクで1�
 6. App Tracking Transparency（追跡の許可）とプライバシーポリシーのページを用意する
 
 広告を「いつ出すか」は `NyansoroCore/Sources/NyansoroCore/AdPolicy.swift`（練習中・対局中・最初の3試合は出さない、全画面は2試合に1回まで・3分あける、リワードは1日3回まで）。
+
+## Apple でサインインを使う
+今は `Nyansoro/Services/Account.swift` の `AccountConfig.signInEnabled = false`（オフ）。オフのあいだは、サインインの画面もボタンも出ないので、無料の Apple ID（Personal Team）のまま実機で試せます。
+
+有料の Apple Developer Program（年99ドル）に登録したら：
+1. Xcode で TARGETS「Nyansoro」→「Signing & Capabilities」→ Team を有料のチームにする
+2. 「＋ Capability」→「Sign in with Apple」を追加
+3. 機種変更しても記録を引きつぐなら「＋ Capability」→「iCloud」→「CloudKit」にチェックし、コンテナ「iCloud.<Bundle ID>」を作って選ぶ
+4. `AccountConfig.signInEnabled` を `true`（iCloud も使うなら `cloudSyncEnabled` も `true`）にする
+
+- 初回の説明の最初のページに「Apple でサインイン」と「あとで」が出る（審査の決まりで、サインインしなくても遊べるようにしてある）。設定からもサインイン・サインアウトできる
+- Apple から受け取るのは、その人だけの ID と、初回だけの名前・メール。端末のキーチェーンに保存する
+- iCloud には、セーブデータ（ランク・★・称号・成績・練習など）をそのまま置く。遊んだ局数が多い方の記録を残す

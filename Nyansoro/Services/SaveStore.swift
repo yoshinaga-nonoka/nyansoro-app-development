@@ -1,4 +1,5 @@
-// セーブデータ（ランク・★・設定・広告の回数）。端末の UserDefaults に JSON で保存する。
+// セーブデータ（ランク・★・設定・広告の回数・練習と説明）。端末の UserDefaults に JSON で保存する。
+// Apple でサインインしていて iCloud 同期がオンなら、iCloud にも同じ JSON を置く（Services/CloudSave.swift）。
 
 import Foundation
 
@@ -60,6 +61,14 @@ struct Settings: Codable, Equatable {
     }
 }
 
+/// 初めて起動したときの説明（ホームの前に出す）
+struct OnboardingState: Codable, Equatable {
+    /// 説明を最後まで見た（または飛ばした）
+    var introDone = false
+    /// Apple でサインインを案内した（「あとで」を押した場合も含む）
+    var signInOffered = false
+}
+
 struct SaveData: Codable, Equatable {
     var progress = RankProgress()
     var settings = Settings()
@@ -71,8 +80,14 @@ struct SaveData: Codable, Equatable {
     /// 目標・成績（上達のしくみ）
     var missions = MissionProgress()
     var stats = PlayStats()
+    /// 初回の説明
+    var onboarding = OnboardingState()
+    /// クリアした練習（TutorialTask の rawValue）
+    var tutorialTasks: [String] = []
 
     init() {}
+
+    func cleared(_ task: TutorialTask) -> Bool { tutorialTasks.contains(task.rawValue) }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -84,6 +99,11 @@ struct SaveData: Codable, Equatable {
         askedReminders = try c.decodeIfPresent(Bool.self, forKey: .askedReminders) ?? false
         missions = try c.decodeIfPresent(MissionProgress.self, forKey: .missions) ?? MissionProgress()
         stats = try c.decodeIfPresent(PlayStats.self, forKey: .stats) ?? PlayStats()
+        // 説明ができる前から遊んでいた人には、初回の説明は出さない
+        var played = OnboardingState()
+        played.introDone = progress.tutorialDone || stats.rounds > 0
+        onboarding = try c.decodeIfPresent(OnboardingState.self, forKey: .onboarding) ?? played
+        tutorialTasks = try c.decodeIfPresent([String].self, forKey: .tutorialTasks) ?? (progress.tutorialDone ? [TutorialTask.basics.rawValue] : [])
     }
 }
 

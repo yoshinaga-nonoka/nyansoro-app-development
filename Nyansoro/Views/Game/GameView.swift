@@ -232,6 +232,7 @@ struct GameView: View {
                     RubyText("キミ", size: 14, bold: true)
                 }
                 RubyText("\(game.me.score)点《てん》", size: 15, bold: true)
+                if game.me.riichi { RiichiChip() }
                 Spacer(minLength: 0)
                 if game.hints, let ins = d.insight {
                     StatusPill(dist: ins.dist, win: game.myClaim || ins.canWin)
@@ -254,7 +255,7 @@ struct GameView: View {
         let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         return HStack(spacing: 8) {
             if game.tutorial {
-                RubyText(game.nudge ?? tutorialLine(game.tStep), size: 14)
+                RubyText(game.nudge ?? game.tutorialLine, size: 14)
                 Spacer(minLength: 0)
                 if game.tutorialGate {
                     Button { game.tutorialNext() } label: {
@@ -276,7 +277,9 @@ struct GameView: View {
 
     @ViewBuilder
     private func coachContent(_ d: GameController.Derived) -> some View {
-        if game.myClaim, let t = game.state.lastDiscard?.tile {
+        if game.myDiscardTurn, game.me.riichi, !game.canTsumo {
+            RubyText("リーチ中《ちゅう》：引《ひ》いた猫《ねこ》をそのまま捨《す》てるよ", size: 14)
+        } else if game.myClaim, let t = game.state.lastDiscard?.tile {
             RubyText("**「\(kindName(t.kind))」で揃《そろ》う！ にゃん！で勝《か》ち**", size: 14)
         } else if game.myDraw {
             RubyText("キミの番《ばん》。山《やま》から1枚《まい》引《ひ》くよ", size: 14)
@@ -288,13 +291,13 @@ struct GameView: View {
             } else if game.myDiscardTurn && ins.rec != nil {
                 HStack(spacing: 4) {
                     PawIcon().frame(width: 20, height: 20)
-                    RubyText(ins.dist == 1 ? "を捨《す》てると**あと1枚《まい》！**\(pointsText(d.waitPoints))" : "がおすすめ。いらない猫《ねこ》を捨《す》てよう", size: 14)
+                    RubyText(ins.dist == 1 ? "を捨《す》てると**あと1枚《まい》！**\(ins.canRiichi ? "リーチもできるよ" : "")\(pointsText(d.waitPoints))" : "がおすすめ。いらない猫《ねこ》を捨《す》てよう", size: 14)
                 }
             } else if game.myDiscardTurn {
                 RubyText("いらない猫《ねこ》を1枚《まい》捨《す》てよう", size: 14)
             } else if ins.dist == 1 {
                 HStack(spacing: 8) {
-                    RubyText("待《ま》ってる猫《ねこ》", size: 12, bold: true, color: Palette.inkSoft)
+                    RubyText(game.me.riichi ? "リーチ中《ちゅう》・待《ま》ってる猫《ねこ》" : "待《ま》ってる猫《ねこ》", size: 12, bold: true, color: Palette.inkSoft)
                         .fixedSize()
                     ForEach(ins.waits, id: \.self) { k in
                         HStack(alignment: .bottom, spacing: 2) {
@@ -319,19 +322,6 @@ struct GameView: View {
     private func pointsText(_ p: (min: Int, max: Int)?) -> String {
         guard let p else { return "" }
         return p.min == p.max ? "　上《あ》がれば\(p.max)点《てん》" : "　上《あ》がれば\(p.min)〜\(p.max)点《てん》"
-    }
-
-    private func tutorialLine(_ step: Int) -> String {
-        switch step {
-        case 0: return "これがキミの手《て》。猫《ねこ》が8枚《まい》あるよ。**3枚《まい》セットを3つ**作《つく》ったら勝《か》ち！"
-        case 1: return "**三毛《みけ》のパパが3枚《まい》**！ 同《おな》じ猫《ねこ》3枚《まい》でセット完成《かんせい》。緑《みどり》の線《せん》が目印《めじるし》だよ。"
-        case 10: return "山《やま》から1枚《まい》引《ひ》くよ…"
-        case 2: return "**黒《くろ》の子猫《こねこ》**を引《ひ》いた！ 黒《くろ》のパパ・ママ・子猫《こねこ》で**家族《かぞく》セット**完成《かんせい》。"
-        case 3: return "いらない猫《ねこ》を捨《す》てよう。肉球《にくきゅう》マークの**茶《ちゃ》トラのママ**を2回《かい》タップ！"
-        case 4: return "**あと1枚《まい》！** 白《しろ》の子猫《こねこ》か招《まね》き猫《ねこ》が来《く》れば勝《か》ち。待《ま》ってみよう。"
-        case 5: return "**白《しろ》の子猫《こねこ》**が出《で》た！ 下《した》の**にゃん！**ボタンを押《お》そう"
-        default: return ""
-        }
     }
 
     private func hand(_ d: GameController.Derived, width: CGFloat) -> some View {
@@ -395,6 +385,7 @@ struct GameView: View {
             game.tapTile(t)
         } label: {
             TileView(kind: t.kind, width: tw, selected: game.selectedId == t.id, recommended: rec == t.id)
+                .opacity(game.me.riichi && game.myDiscardTurn && t.id != game.state.drawn?.id ? 0.7 : 1)
         }
         .buttonStyle(.plain)
     }
@@ -414,13 +405,23 @@ struct GameView: View {
                 NyanButton { game.act(.tsumo) }
             }
             if game.myDiscardTurn, let sel = game.selectedTile {
-                Button { game.discard(sel) } label: {
-                    RubyText("「\(kindName(sel.kind))」を捨《す》てる", size: 15, display: true, color: Palette.onPink)
+                let riichi = game.canRiichiSelected && game.task != .basics
+                if riichi {
+                    Button { game.declareRiichi(sel) } label: {
+                        RubyText("リーチ", size: 17, display: true, color: Palette.onGold)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .nyan))
+                    .accessibilityHint("あと1枚の形で宣言して捨てる。上がると+10点")
                 }
-                .buttonStyle(PillButtonStyle(kind: .primary))
+                if !(riichi && game.task == .riichi) {
+                    Button { game.discard(sel) } label: {
+                        RubyText(riichi ? "捨《す》てるだけ" : "「\(kindName(sel.kind))」を捨《す》てる", size: 15, display: true, color: Palette.onPink)
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .primary))
+                }
             }
             if game.myDiscardTurn && game.selectedTile == nil && !game.canTsumo {
-                RubyText("捨《す》てる猫《ねこ》をタップしてね", size: 13, bold: true, color: Palette.inkSoft)
+                RubyText(game.me.riichi ? "リーチ中《ちゅう》…" : "捨《す》てる猫《ねこ》をタップしてね", size: 13, bold: true, color: Palette.inkSoft)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 56)
@@ -446,13 +447,14 @@ struct GameView: View {
                 onEnableReminders: { app.enableReminders() },
                 onExit: { app.leaveMatch { app.showTitle() } },
                 onPlay: { next in app.leaveMatch { app.play(next) } },
-                onLesson: { app.showLesson = true }
+                onLesson: { app.showLesson = true },
+                clearedTasks: Set(TutorialTask.allCases.filter { app.save.cleared($0) })
             )
         }
         if game.showQuit {
             ModalCard(maxWidth: 420) {
                 RubyText("途中《とちゅう》でやめる？", size: 22, display: true, alignment: .center)
-                RubyText(game.tutorial ? "練習《れんしゅう》はいつでもやり直《なお》せるよ。" : "この試合《しあい》の★はもらえないよ。", size: 14, alignment: .center)
+                RubyText(game.tutorial ? "練習《れんしゅう》はいつでもやり直《なお》せるよ。ホームの「練習《れんしゅう》」から選《えら》べる。" : "この試合《しあい》の★はもらえないよ。", size: 14, alignment: .center)
                 HStack(spacing: 10) {
                     Button { app.showTitle() } label: { RubyText("やめる", size: 16, display: true) }
                         .buttonStyle(PillButtonStyle(kind: .ghost))
@@ -482,6 +484,7 @@ struct SeatView: View {
                     RubyText("\(player.score)点《てん》", size: 11, color: Palette.matInkSoft)
                 }
                 Spacer(minLength: 0)
+                if player.riichi { RiichiChip(small: true) }
                 if active { ThinkingDots() }
             }
             TileBacks(count: player.hand.count)
@@ -564,6 +567,23 @@ struct RoundDots: View {
         .overlay(Capsule().strokeBorder(Palette.line, lineWidth: 2))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(now + 1)局目 / 全\(total)局")
+    }
+}
+
+/// 「リーチ」の印（自分のトレイと相手の席）
+struct RiichiChip: View {
+    var small = false
+
+    var body: some View {
+        Text("リーチ")
+            .font(AppFont.display(small ? 11 : 13))
+            .foregroundColor(Palette.onGold)
+            .padding(.horizontal, small ? 7 : 10)
+            .padding(.vertical, small ? 1 : 3)
+            .background(Capsule().fill(Palette.gold))
+            .overlay(Capsule().strokeBorder(Palette.goldPress, lineWidth: 2))
+            .fixedSize()
+            .accessibilityLabel("リーチ中")
     }
 }
 
