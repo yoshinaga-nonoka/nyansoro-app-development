@@ -1,0 +1,49 @@
+# 公開用サイト（プライバシーポリシー・app-ads.txt）を Cloudflare Pages（https://nyansoro.pages.dev）に載せる
+# 使う前に：GitHub のリポジトリ → Settings → Secrets and variables → Actions に
+#   CLOUDFLARE_API_TOKEN（権限：アカウント / Cloudflare Pages / 編集）を登録する
+name: Site
+
+on:
+  push:
+    branches: [main, ads-launch-prep]
+    paths:
+      - docs/**
+      - scripts/build-site.py
+      - .github/workflows/site.yml
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: サイトを作る
+        run: python3 scripts/build-site.py
+      - name: 鍵が登録されているか
+        id: check
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN がまだ登録されていないので、載せるのは飛ばします"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Cloudflare Pages に載せる
+        if: steps.check.outputs.ok == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: af0258af659c2f26284e3fbe4aa62dea
+        run: npx -y wrangler@4 pages deploy build/site --project-name nyansoro --branch main --commit-dirty=true
+      - name: 載ったか確かめる
+        if: steps.check.outputs.ok == 'true'
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS https://nyansoro.pages.dev/app-ads.txt | grep -q pub-9015776457528965; then break; fi
+            sleep 6
+          done
+          for p in /privacy-policy /contact /app-ads.txt; do
+            echo "$p: $(curl -s -o /dev/null -w '%{http_code}' https://nyansoro.pages.dev$p)"
+          done
+          curl -fsS https://nyansoro.pages.dev/app-ads.txt

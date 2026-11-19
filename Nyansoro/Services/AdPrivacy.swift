@@ -29,7 +29,7 @@ struct PrivacyChoices: Codable, Equatable {
 
 enum PrivacyLinks {
     /// プライバシーポリシーのページ（docs/privacy-policy.md を公開した場所）
-    static let policy = URL(string: "https://yoshinaga-nonoka.github.io/nyansoro/privacy-policy.html")!
+    static let policy = URL(string: "https://nyansoro.pages.dev/privacy-policy")!
 }
 
 @MainActor
