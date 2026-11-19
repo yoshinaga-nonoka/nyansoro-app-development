@@ -23,7 +23,7 @@ final class GameController: ObservableObject {
     @Published var showSettings = false { didSet { schedule() } }
     @Published var showQuit = false { didSet { schedule() } }
 
-    private var task: Task<Void, Never>?
+    private var stepTask: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
     private var scriptDone = false
     private var cpuRandom: Mulberry32?
@@ -355,7 +355,7 @@ final class GameController: ObservableObject {
     // MARK: CPU と自動操作の間合い
 
     func schedule() {
-        task?.cancel()
+        stepTask?.cancel()
         guard !paused else { return }
         let s = state
         let cur = s.players[s.current]
@@ -398,7 +398,7 @@ final class GameController: ObservableObject {
         }
 
         guard let wait = delay else { return }
-        task = Task { [weak self, action, cpuTurn] in
+        stepTask = Task { [weak self, action, cpuTurn] in
             try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             guard let self, !Task.isCancelled, !self.paused else { return }
             if cpuTurn {

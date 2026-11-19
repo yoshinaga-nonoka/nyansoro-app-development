@@ -18,6 +18,8 @@ struct RubyToken {
     var base: String
     var reading: String?
     var bold: Bool
+    /// ふりがな付きの字の直後の「。」など（読みの下には入れず、行の頭にも来ないようにくっつける）
+    var tail = ""
 
     private static let closing: Set<Character> = ["、", "。", "，", "．", "！", "？", "」", "』", "）", "…", "ー", "〜", "：", "!", "?", ")", "・"]
     private static let opening: Set<Character> = ["「", "『", "（", "("]
@@ -47,8 +49,12 @@ struct RubyToken {
                     }
                     if opening.contains(ch) {
                         pendingOpen.append(ch)
-                    } else if closing.contains(ch), let last = out.last, last.reading == nil, pendingOpen.isEmpty {
-                        out[out.count - 1].base.append(ch)
+                    } else if closing.contains(ch), let last = out.last, pendingOpen.isEmpty {
+                        if last.reading == nil {
+                            out[out.count - 1].base.append(ch)
+                        } else {
+                            out[out.count - 1].tail.append(ch)
+                        }
                     } else {
                         out.append(RubyToken(base: pendingOpen + String(ch), reading: nil, bold: bold))
                         pendingOpen = ""
@@ -104,6 +110,19 @@ struct RubyText: View {
     }
 
     private func tokenView(_ t: RubyToken) -> some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            baseView(t)
+            if !t.tail.isEmpty {
+                Text(t.tail)
+                    .font(font(size, strong: bold || t.bold))
+                    .foregroundColor(color)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+    }
+
+    private func baseView(_ t: RubyToken) -> some View {
         VStack(spacing: 0) {
             if furigana {
                 // 読みの行の高さだけ空けておき、読みは上に重ねる
