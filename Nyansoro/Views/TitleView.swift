@@ -202,12 +202,18 @@ struct TitleView: View {
                 .buttonStyle(PillButtonStyle(kind: .ghost))
             }
 
-            HStack(spacing: 12) {
-                soonButton("友達《ともだち》とオンライン")
-                soonButton("誰《だれ》かとオンライン")
+            // 「準備中」のボタンは審査で未完成の機能とみなされやすいので、オンライン対戦ができるまで出さない
+            if Self.showOnlineTeaser {
+                HStack(spacing: 12) {
+                    soonButton("友達《ともだち》とオンライン")
+                    soonButton("誰《だれ》かとオンライン")
+                }
             }
         }
     }
+
+    /// オンライン対戦の「準備中」ボタンを出すか（1.0 では出さない）
+    static let showOnlineTeaser = false
 
     private func soonButton(_ title: String) -> some View {
         Button { app.showOnline = true } label: {

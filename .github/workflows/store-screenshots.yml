@@ -1,0 +1,23 @@
+# App Store 用の画面（iPhone 6.9インチ・iPad 13インチ）を撮る。
+# リリース用のブランチ（release-*）に push したときと、Actions の画面から手で動かしたときだけ動く。
+name: Store screenshots
+
+on:
+  push:
+    branches: ["release-*"]
+  workflow_dispatch:
+
+jobs:
+  store-screenshots:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: App Store 用の画面を撮る
+        run: scripts/store-screenshots.sh
+      - name: 画面をダウンロードできるようにする
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-screenshots
+          path: store/
+          if-no-files-found: warn
