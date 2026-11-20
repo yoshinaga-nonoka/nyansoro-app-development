@@ -1,4 +1,5 @@
 // AdMob（Google Mobile Ads SDK）で広告を出す。いつ出すかの決まりは NyansoroCore/AdPolicy.swift。
+// 年齢・同意・追跡の許可（Services/AdPrivacy.swift）が済むまでは、広告を読み込まない。
 
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
@@ -10,16 +11,29 @@ final class AdMobAdService: NSObject, AdService, FullScreenContentDelegate {
     private var interstitial: InterstitialAd?
     private var dismissed: CheckedContinuation<Void, Never>?
     private var earnedReward = false
+    private var started = false
+    /// 先読みした広告が、どの年齢・同意の扱いで読み込んだものか（AdPrivacy.revision）
+    private var loadedRevision = 0
 
     override init() {
         super.init()
-        // 子どもも遊ぶので、広告の内容は「保護者の指導があれば見てよい」まで
-        MobileAds.shared.requestConfiguration.maxAdContentRating = .parentalGuidance
-        MobileAds.shared.start(completionHandler: nil)
         Task { await preload() }
     }
 
     private func preload() async {
+        let privacy = AdPrivacy.shared
+        await privacy.waitUntilReady()
+        guard privacy.canRequestAds else { return }
+        if !started {
+            started = true
+            MobileAds.shared.start(completionHandler: nil)
+        }
+        // 年齢や同意を変えたら、前の扱いで読み込んだ広告は使わない
+        if loadedRevision != privacy.revision {
+            loadedRevision = privacy.revision
+            rewarded = nil
+            interstitial = nil
+        }
         if rewarded == nil, !AdConfig.rewardedUnitID.isEmpty {
             rewarded = try? await RewardedAd.load(with: AdConfig.rewardedUnitID, request: Request())
             rewarded?.fullScreenContentDelegate = self
@@ -31,8 +45,8 @@ final class AdMobAdService: NSObject, AdService, FullScreenContentDelegate {
     }
 
     func showRewarded() async -> Bool {
-        if rewarded == nil { await preload() }
-        guard let ad = rewarded, let root = Self.topViewController() else { return false }
+        await preload()
+        guard let ad = rewarded, let root = UIApplication.topViewController() else { return false }
         rewarded = nil
         earnedReward = false
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
@@ -46,7 +60,8 @@ final class AdMobAdService: NSObject, AdService, FullScreenContentDelegate {
     }
 
     func showInterstitial() async {
-        guard let ad = interstitial, let root = Self.topViewController() else {
+        if loadedRevision != AdPrivacy.shared.revision { await preload() }
+        guard let ad = interstitial, let root = UIApplication.topViewController() else {
             Task { await preload() }
             return
         }
@@ -70,16 +85,6 @@ final class AdMobAdService: NSObject, AdService, FullScreenContentDelegate {
     private func finish() {
         dismissed?.resume()
         dismissed = nil
-    }
-
-    /// 広告を重ねて出す画面（いちばん上に出ている画面）
-    private static func topViewController() -> UIViewController? {
-        let scene = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first { $0.activationState == .foregroundActive }
-        var top = scene?.windows.first { $0.isKeyWindow }?.rootViewController
-        while let presented = top?.presentedViewController { top = presented }
-        return top
     }
 }
 #endif

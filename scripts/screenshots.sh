@@ -58,6 +58,10 @@ xcrun simctl ui "$PHONE" appearance light
 shoot "$PHONE" iphone onboarding onboarding-signin onboarding-roles onboarding-riichi practice tutorial tutorial-riichi tutorial-clear riichi help-yaku
 shoot "$PHONE" iphone game claim help settings round-result near-miss match-result rankup ranks title revive daily-result streak lesson missions help-cats
 WAIT=20 shoot "$PHONE" iphone ad-test
+# 広告のプライバシー：年齢の確認・設定の「広告とプライバシー」・追跡の確認・欧州の同意画面（Services/AdPrivacy.swift）
+shoot "$PHONE" iphone age-check privacy privacy-child
+# 追跡の確認は答えないと次の場面にも残るので、いちばん最後に撮る
+WAIT=15 shoot "$PHONE" iphone consent-eea att-prompt
 xcrun simctl ui "$PHONE" appearance dark
 shoot "$PHONE" iphone-dark title game round-result help-cats onboarding-roles riichi
 xcrun simctl shutdown "$PHONE" || true

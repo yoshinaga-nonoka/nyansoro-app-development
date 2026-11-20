@@ -7,7 +7,7 @@
 2. 画面上部の実行先で iPhone のシミュレーター（例：iPhone 16）を選び、▶︎ を押す
 3. 自分の iPhone で動かすとき
    - 左の「Nyansoro」→ TARGETS「Nyansoro」→「Signing & Capabilities」で Team に自分の Apple ID を選ぶ
-   - Bundle Identifier の `com.example.nyansoro` を、自分だけの名前（例：`com.あなたの名前.nyansoro` を英数字で）に変える
+   - Bundle Identifier は App Store Connect に登録した `com.nonoka.nyansoro`（変えない。ほかの Apple ID で試すときだけ一時的に変える）
 
 ### 自分の iPhone で試す（実機テスト）
 1. Xcode → Settings… → Accounts で、左下の「＋」から自分の Apple ID を追加する（無料でよい）
@@ -16,7 +16,7 @@
 4. Xcode 左の「Nyansoro」→ TARGETS「Nyansoro」→「Signing & Capabilities」
    - 「Automatically manage signing」にチェック
    - Team で自分の Apple ID（Personal Team）を選ぶ
-   - Bundle Identifier を自分だけの名前に変える（例：`com.yourname.nyansoro`。英数字とピリオドだけ）
+   - Bundle Identifier は `com.nonoka.nyansoro` のまま（App Store Connect に登録したもの）
 5. 画面上部の実行先で、つないだ iPhone を選んで ▶︎
 6. 初回だけ iPhone 側で止められたら：設定 → 一般 → VPNとデバイス管理 → 自分の Apple ID のデベロッパ を「信頼」して、もう一度 ▶︎
 

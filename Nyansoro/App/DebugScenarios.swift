@@ -1,5 +1,5 @@
 // 開発用：起動時に `-scenario 名前` を渡すと、その場面から始まる（画面の自動撮影用）。
-// 例）xcrun simctl launch <端末> com.example.nyansoro -scenario game
+// 例）xcrun simctl launch <端末> com.nonoka.nyansoro -scenario game
 // リリース用のビルドには含まれない。
 
 #if DEBUG
