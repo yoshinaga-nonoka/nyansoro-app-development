@@ -76,7 +76,7 @@ final class GameTests: XCTestCase {
             case .draw: a = .draw
             case .discard:
                 let p = s.players[s.current]
-                a = canWin(p.hand) ? .tsumo : .discard(tileId: chooseDiscard(s, s.current, level: p.level, rand: { r.nextUnit() }))
+                a = chooseAction(s, s.current, level: p.level, rand: { r.nextUnit() })
             case .claim: a = .ron(player: s.claimQueue[0])
             default: a = .nextRound
             }
@@ -297,9 +297,9 @@ final class MissionTests: XCTestCase {
         var p = MissionProgress()
         var stats = PlayStats()
         let done = MissionTracker.roundEnded(s, progress: &p, stats: &stats).map(\.id)
-        XCTAssertEqual(Set(done), [.firstWin, .tsumoWin, .noJokerWin, .allSameWin, .fastWin, .bigWin, .perfectWin])
+        XCTAssertEqual(Set(done), [.firstWin, .tsumoWin, .noJokerWin, .allSameWin, .fastWin, .bigWin, .perfectWin, .roleWin])
         XCTAssertEqual(stats.wins, 1)
-        XCTAssertEqual(stats.bestPoints, 30)
+        XCTAssertEqual(stats.bestPoints, 45) // パパそろい +15
         XCTAssertEqual(stats.fastestWin, 1)
         XCTAssertEqual(p.count(.wins10), 1)
         XCTAssertTrue(MissionTracker.roundEnded(s, progress: &p, stats: &stats).isEmpty, "achieved missions are not repeated")

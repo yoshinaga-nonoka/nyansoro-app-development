@@ -163,11 +163,19 @@ struct TitleView: View {
             .buttonStyle(PillButtonStyle(kind: .primary, big: true))
 
             HStack(spacing: 12) {
-                Button { app.play(.tutorial) } label: {
-                    RubyText("練習《れんしゅう》", size: 16, display: true, color: app.save.progress.tutorialDone ? Palette.ink : Palette.onMint)
-                        .frame(maxWidth: .infinity)
+                let practiced = TutorialTask.allCases.filter { app.save.cleared($0) }.count
+                let allPracticed = practiced == TutorialTask.allCases.count
+                Button { app.showPractice = true } label: {
+                    VStack(spacing: 0) {
+                        RubyText("練習《れんしゅう》", size: 16, display: true, color: allPracticed ? Palette.ink : Palette.onMint)
+                        Text("\(practiced)/\(TutorialTask.allCases.count)")
+                            .font(AppFont.body(11, bold: true))
+                            .foregroundColor(allPracticed ? Palette.inkSoft : Palette.onMint)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(PillButtonStyle(kind: app.save.progress.tutorialDone ? .ghost : .secondary))
+                .buttonStyle(PillButtonStyle(kind: allPracticed ? .ghost : .secondary))
+                .accessibilityLabel("練習 \(practiced)/\(TutorialTask.allCases.count) クリア")
                 Button { app.showRanks() } label: {
                     RubyText("ランクを選《えら》ぶ", size: 16, display: true)
                         .frame(maxWidth: .infinity)

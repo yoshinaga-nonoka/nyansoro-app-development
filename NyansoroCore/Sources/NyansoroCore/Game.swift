@@ -24,6 +24,10 @@ public struct PlayerState: Codable, Sendable, Equatable {
     public var hand: [Tile] = []
     public var discards: [Tile] = []
     public var score: Int = 0
+    /// リーチ中（手を変えられない。引いた猫をそのまま捨てる）
+    public var riichi = false
+    /// リーチしてから、まだ次の猫を捨てていない（「すぐにゃん」の対象）
+    public var ippatsu = false
 
     public var name: String { setup.name }
     public var isHuman: Bool { setup.isHuman }
@@ -67,6 +71,8 @@ public struct Discard: Codable, Sendable, Equatable {
 public enum Action: Equatable, Sendable {
     case draw
     case discard(tileId: Int)
+    /// リーチを宣言して、この猫を捨てる
+    case riichi(tileId: Int)
     case tsumo
     case ron(player: Int)
     case pass(player: Int)
@@ -125,6 +131,8 @@ public struct GameState: Codable, Sendable, Equatable {
         for i in players.indices {
             players[i].hand = []
             players[i].discards = []
+            players[i].riichi = false
+            players[i].ippatsu = false
         }
         for i in 0..<seats {
             players[(dealer + i) % seats].hand = Array(deck.prefix(handSize))
@@ -158,30 +166,35 @@ public struct GameState: Codable, Sendable, Equatable {
             return true
 
         case .tsumo:
-            guard phase == .discard, let win = scoreWin(players[current].hand, tsumo: true) else { return false }
+            let p = players[current]
+            guard phase == .discard, let win = scoreWin(p.hand, WinContext(tsumo: true, riichi: p.riichi, ippatsu: p.ippatsu, lastTile: wall.isEmpty)) else { return false }
             var deltas = [0, 0, 0, 0]
             deltas[current] = win.total
             endRound(RoundResult(kind: .tsumo, winner: current, from: nil, tile: drawn, win: win, deltas: deltas))
             return true
 
         case let .discard(tileId):
-            guard phase == .discard, let idx = players[current].hand.firstIndex(where: { $0.id == tileId }) else { return false }
-            let tile = players[current].hand.remove(at: idx)
-            players[current].discards.append(tile)
-            lastDiscard = Discard(tile: tile, from: current)
-            drawn = nil
-            claimQueue = []
-            for i in 1..<seats {
-                let q = (current + i) % seats
-                if canWin(players[q].hand, with: tile) { claimQueue.append(q) }
+            guard phase == .discard, players[current].hand.contains(where: { $0.id == tileId }) else { return false }
+            // リーチ中は、引いた猫しか捨てられない
+            if players[current].riichi {
+                guard tileId == drawn?.id else { return false }
+                players[current].ippatsu = false
             }
-            if claimQueue.isEmpty { advance() } else { phase = .claim }
+            discardTile(tileId)
+            return true
+
+        case let .riichi(tileId):
+            guard phase == .discard, canRiichi(seat: current, discarding: tileId) else { return false }
+            discardTile(tileId)
+            players[lastDiscard!.from].riichi = true
+            players[lastDiscard!.from].ippatsu = true
             return true
 
         case let .ron(player):
             guard phase == .claim, claimQueue.first == player, let ld = lastDiscard else { return false }
             let hand = players[player].hand + [ld.tile]
-            guard let win = scoreWin(hand, tsumo: false) else { return false }
+            let p = players[player]
+            guard let win = scoreWin(hand, WinContext(tsumo: false, riichi: p.riichi, ippatsu: p.ippatsu, lastTile: wall.isEmpty)) else { return false }
             players[ld.from].discards.removeAll { $0.id == ld.tile.id }
             players[player].hand = hand
             var deltas = [0, 0, 0, 0]
@@ -212,6 +225,43 @@ public struct GameState: Codable, Sendable, Equatable {
     public func applying(_ action: Action) -> GameState? {
         var s = self
         return s.apply(action) ? s : nil
+    }
+
+    /// リーチできるか：まだリーチしていなくて、その猫を捨てると「あと1枚」になる
+    public func canRiichi(seat: Int, discarding tileId: Int) -> Bool {
+        let p = players[seat]
+        guard !p.riichi, p.hand.count == handSize + 1, let t = p.hand.first(where: { $0.id == tileId }) else { return false }
+        var counts = countKinds(p.hand)
+        counts[t.kind] -= 1
+        return distance(counts) == 1
+    }
+
+    /// 捨てると「あと1枚」になる猫の種類（リーチできる猫）
+    public func riichiKinds(seat: Int) -> [Int] {
+        let p = players[seat]
+        guard !p.riichi, p.hand.count == handSize + 1 else { return [] }
+        var counts = countKinds(p.hand)
+        var out: [Int] = []
+        for k in 0..<numKinds where counts[k] > 0 {
+            counts[k] -= 1
+            if distance(counts) == 1 { out.append(k) }
+            counts[k] += 1
+        }
+        return out
+    }
+
+    private mutating func discardTile(_ tileId: Int) {
+        let idx = players[current].hand.firstIndex(where: { $0.id == tileId })!
+        let tile = players[current].hand.remove(at: idx)
+        players[current].discards.append(tile)
+        lastDiscard = Discard(tile: tile, from: current)
+        drawn = nil
+        claimQueue = []
+        for i in 1..<seats {
+            let q = (current + i) % seats
+            if canWin(players[q].hand, with: tile) { claimQueue.append(q) }
+        }
+        if claimQueue.isEmpty { advance() } else { phase = .claim }
     }
 
     private mutating func advance() {

@@ -1,10 +1,11 @@
 // CPUの考え方（Lv1〜5）と、プレイヤー向けの「おすすめ」。
 // Lv1: あと何枚が減るように（うっかり50%） / Lv2: 同じ（うっかり25%） / Lv3: 残り枚数も数える（うっかり10%）
-// Lv4: 危ない猫を捨てない（うっかり3%） / Lv5: 点の高い上がりも狙う（うっかりなし）
+// Lv4: 危ない猫を捨てない・リーチした相手を警戒する（うっかり4.5%） / Lv5: 点の高い役・待ちも狙う（うっかりなし）
+// リーチ：あと1枚になったら宣言する（Lv1 は半分、Lv2 は3回に1回、Lv3 は5回に1回くらい言い忘れる）。リーチ中は引いた猫をそのまま捨てる
 // ※ Web版のシミュレーションでは「考え方」の差より「うっかり率」の差のほうが強さに効いた
 
 /// レベルごとの「うっかり率」：この確率で、考えずに適当な猫を捨てる
-public let mistakeRate: [Double] = [0, 0.5, 0.25, 0.1, 0.03, 0]
+public let mistakeRate: [Double] = [0, 0.5, 0.25, 0.1, 0.045, 0]
 
 /// seat から見えている牌の枚数（自分の手＋全員の捨て牌）
 public func visibleCounts(_ s: GameState, _ seat: Int) -> [Int] {
@@ -40,7 +41,8 @@ public func dangerOf(_ s: GameState, _ seat: Int, _ kind: Int) -> Double {
     var total = 0.0
     for o in s.players.indices where o != seat {
         let disc = s.players[o].discards
-        var d = min(1.0, 0.2 + Double(disc.count) * 0.08)
+        // リーチした人は「あと1枚」なので、とても危ない
+        var d = s.players[o].riichi ? 0.95 : min(1.0, 0.2 + Double(disc.count) * 0.08)
         if disc.contains(where: { $0.kind == kind }) { d *= 0.35 }
         let famDisc = disc.filter { $0.kind != joker && familyOf($0.kind) == familyOf(kind) }.count
         if famDisc >= 2 { d *= 0.55 } else if famDisc == 1 { d *= 0.8 }
@@ -50,14 +52,14 @@ public func dangerOf(_ s: GameState, _ seat: Int, _ kind: Int) -> Double {
     return total / Double(s.players.count - 1)
 }
 
-/// 「全部同じ」「全部家族」を狙える形が残っているか
+/// 点の高い揃え方（役）を狙える形が残っているか：狙える役の点の合計 ÷ 10（全部同じ猫なら 1、パパそろいなら 2.5）
 func purityOf(_ counts: [Int], _ dist: Int) -> Double {
     let jokers = counts[joker]
+    var best = 0
     for c in combos where max(0, deficit(counts, c) - jokers) == dist {
-        let types = c.sets.map { setTypes[$0].type }
-        if types.allSatisfy({ $0 == types[0] }) { return 1 }
+        best = max(best, ScoreTable.shapeItems(c).reduce(0) { $0 + $1.points })
     }
-    return 0
+    return Double(best) / 10
 }
 
 public struct DiscardOption: Sendable {
@@ -92,6 +94,20 @@ private func dangerWeight(_ dist: Int, _ penalty: Int) -> Double {
     return base * (1 + Double(penalty) / 10)
 }
 
+/// あと1枚の形のとき：待っている猫の残り枚数 × 上がったときの点（リーチする前提）の合計
+func expectedWinPoints(_ s: GameState, _ seat: Int, discarding kind: Int) -> Double {
+    var hand = s.players[seat].hand
+    guard let i = hand.lastIndex(where: { $0.kind == kind }) else { return 0 }
+    hand.remove(at: i)
+    let unseen = unseenCounts(s, seat)
+    var sum = 0
+    for k in waitingKinds(countKinds(hand)) where unseen[k] > 0 {
+        let pts = scoreWin(hand + [Tile(id: -1, kind: k)], WinContext(tsumo: false, riichi: !s.players[seat].riichi))?.total ?? 0
+        sum += unseen[k] * pts
+    }
+    return Double(sum)
+}
+
 private func pickTile(_ s: GameState, _ seat: Int, kind: Int) -> Int {
     let hand = s.players[seat].hand
     return hand.last(where: { $0.kind == kind })!.id
@@ -99,6 +115,7 @@ private func pickTile(_ s: GameState, _ seat: Int, kind: Int) -> Int {
 
 /// CPUが捨てる牌の id を決める
 public func chooseDiscard(_ s: GameState, _ seat: Int, level: Int, rand: () -> Double = { Double.random(in: 0..<1) }) -> Int {
+    if s.players[seat].riichi, let d = s.drawn { return d.id }
     let normal = s.players[seat].hand.filter { $0.kind != joker }
     let rate = level < mistakeRate.count ? mistakeRate[level] : 0
     if rand() < rate {
@@ -111,18 +128,42 @@ public func chooseDiscard(_ s: GameState, _ seat: Int, level: Int, rand: () -> D
         return pickTile(s, seat, kind: pool[min(pool.count - 1, Int(rand() * Double(pool.count)))].kind)
     }
     let opts = discardOptions(s, seat, ukeire: true, danger: level >= 4, purity: level >= 5)
+    let someoneRiichi = s.players.indices.contains { $0 != seat && s.players[$0].riichi }
     var bestKind = opts[0].kind
     var bestScore = -Double.infinity
     for o in opts {
         var score = -Double(o.dist) * 100 + Double(o.ukeire) * 2 + rand() * 0.5
-        if level >= 4 { score -= o.danger * dangerWeight(o.dist, s.rules.furikomiPenalty) }
-        if level >= 5 { score += o.purity * 12 }
+        if level >= 4 { score -= o.danger * dangerWeight(o.dist, s.rules.furikomiPenalty) * (someoneRiichi ? 1.6 : 1) }
+        if level >= 5 {
+            score += o.purity * 12
+            if o.dist == 1 { score += expectedWinPoints(s, seat, discarding: o.kind) * 0.3 }
+        }
         if score > bestScore {
             bestScore = score
             bestKind = o.kind
         }
     }
     return pickTile(s, seat, kind: bestKind)
+}
+
+/// レベルごとの「リーチを言う確率」（下のレベルほど言い忘れる）
+func riichiRate(_ level: Int) -> Double {
+    switch level {
+    case ...1: return 0.5
+    case 2: return 0.65
+    case 3: return 0.8
+    default: return 1
+    }
+}
+
+/// CPUの1手（自分の番で、猫を引いたあと）：上がる・リーチして捨てる・捨てる
+public func chooseAction(_ s: GameState, _ seat: Int, level: Int, rand: () -> Double = { Double.random(in: 0..<1) }) -> Action {
+    if canWin(s.players[seat].hand) { return .tsumo }
+    let id = chooseDiscard(s, seat, level: level, rand: rand)
+    if s.canRiichi(seat: seat, discarding: id), rand() < riichiRate(level) {
+        return .riichi(tileId: id)
+    }
+    return .discard(tileId: id)
 }
 
 /// プレイヤーへの「おすすめ」（Lv3と同じ考え方。乱数なし）
@@ -145,22 +186,32 @@ public struct Insight: Sendable, Equatable {
     public let rec: Int?
     public let afterDiscard: Bool
     public let unseen: [Int]
+    /// おすすめを捨てるとリーチできる
+    public var canRiichi = false
+    /// リーチ中
+    public var riichi = false
 }
 
 public func handInsight(_ s: GameState, seat: Int, recommendOn: Bool) -> Insight? {
-    let hand = s.players[seat].hand
+    let p = s.players[seat]
+    let hand = p.hand
     guard (8...9).contains(hand.count), s.phase != .roundEnd, s.phase != .matchEnd else { return nil }
     var counts = countKinds(hand)
     let unseen = unseenCounts(s, seat)
     if hand.count == 9 {
-        if canWin(hand) { return Insight(canWin: true, dist: 0, waits: [], rec: nil, afterDiscard: false, unseen: unseen) }
+        if canWin(hand) { return Insight(canWin: true, dist: 0, waits: [], rec: nil, afterDiscard: false, unseen: unseen, riichi: p.riichi) }
+        // リーチ中は引いた猫を捨てるだけ
+        if p.riichi, s.current == seat, let d = s.drawn {
+            counts[d.kind] -= 1
+            return Insight(canWin: false, dist: 1, waits: waitingKinds(counts), rec: d.kind, afterDiscard: true, unseen: unseen, riichi: true)
+        }
         if recommendOn, let rec = recommendDiscard(s, seat) {
             counts[rec] -= 1
             let dist = distance(counts)
-            return Insight(canWin: false, dist: dist, waits: dist == 1 ? waitingKinds(counts) : [], rec: rec, afterDiscard: true, unseen: unseen)
+            return Insight(canWin: false, dist: dist, waits: dist == 1 ? waitingKinds(counts) : [], rec: rec, afterDiscard: true, unseen: unseen, canRiichi: dist == 1)
         }
         return Insight(canWin: false, dist: distance(counts), waits: [], rec: nil, afterDiscard: false, unseen: unseen)
     }
     let dist = distance(counts)
-    return Insight(canWin: false, dist: dist, waits: dist == 1 ? waitingKinds(counts) : [], rec: nil, afterDiscard: false, unseen: unseen)
+    return Insight(canWin: false, dist: dist, waits: dist == 1 ? waitingKinds(counts) : [], rec: nil, afterDiscard: false, unseen: unseen, riichi: p.riichi)
 }

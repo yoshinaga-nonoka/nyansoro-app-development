@@ -4,7 +4,8 @@ import SwiftUI
 
 enum GameMode: Hashable {
     case cpu(rank: Int)
-    case tutorial
+    /// 練習（チュートリアルタスク）
+    case tutorial(TutorialTask)
     /// 今日の1局（day は Daily.dayNumber）
     case daily(day: Int)
 }
@@ -19,7 +20,7 @@ struct DailySummary: Equatable {
 }
 
 enum MatchReward: Equatable {
-    case tutorial
+    case tutorial(task: TutorialTask, cleared: Bool)
     case practice(place: Int)
     case ranked(place: Int, reward: RankReward)
     case daily(DailySummary)
@@ -28,6 +29,8 @@ enum MatchReward: Equatable {
 @MainActor
 final class AppModel: ObservableObject {
     enum Screen: Equatable {
+        /// 初めて起動したときの説明（ホームの前）
+        case onboarding
         case title
         case ranks
         case game(GameMode, UUID)
@@ -45,6 +48,12 @@ final class AppModel: ObservableObject {
     @Published var showOnline = false
     @Published var showLesson = false
     @Published var showMissions = false
+    /// 練習の一覧
+    @Published var showPractice = false
+    /// 初回の説明を「遊び方」から見直す
+    @Published var showIntro = false
+    /// Apple でサインインしたアカウント（キーチェーンに保存）
+    @Published private(set) var account: AppleAccount? = nil
 
     /// 広告。AdMob が入っていれば AdMob（開発用はテスト広告）、なければ開発用ビルドだけダミー広告
     let debugAds = DebugAdService()
@@ -67,15 +76,22 @@ final class AppModel: ObservableObject {
     /// 開発用：場面指定（DebugScenarios.swift）で使う、対戦の最初の状態
     var debugInitialState: GameState?
     var debugOpenHelp = false
+    /// 練習の案内をこの段階から始める
+    var debugTutorialStep: Int?
+    /// おすすめの猫を選んだ状態で始める
+    var debugSelectRecommended = false
     #endif
 
     init() {
         save = SaveStore.load()
+        account = AccountConfig.enabled ? AccountStore.load() : nil
         applySettings()
         refreshReminders()
+        if !save.onboarding.introDone { screen = .onboarding }
         #if DEBUG
         if let scenario = DebugScenario.current { applyDebugScenario(scenario) }
         #endif
+        checkAccount()
     }
 
     var settings: Settings { save.settings }
@@ -102,7 +118,88 @@ final class AppModel: ObservableObject {
 
     func resetData() {
         SaveStore.clear()
-        save = SaveData()
+        var fresh = SaveData()
+        // 消したあとに、もう一度ホームの前の説明を見せることはしない
+        fresh.onboarding.introDone = true
+        fresh.onboarding.signInOffered = save.onboarding.signInOffered
+        save = fresh
+        pushToCloud()
+    }
+
+    /// 初回の説明を終える。練習を選んだらそのまま始める
+    func finishIntro(start task: TutorialTask?) {
+        save.onboarding.introDone = true
+        save.onboarding.signInOffered = true
+        showIntro = false
+        if let task {
+            play(.tutorial(task))
+        } else if screen == .onboarding {
+            showTitle()
+        }
+    }
+
+    /// 初回の説明を「遊び方」から見直す（シートを閉じてから出す）
+    func replayIntro() {
+        showHelp = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
+            self?.showIntro = true
+        }
+    }
+
+    // MARK: Apple でサインイン・iCloud
+
+    func signedIn(_ new: AppleAccount) {
+        var acc = new
+        // 名前とメールは初回しか届かないので、前に保存したものを残す
+        if let old = AccountStore.load(), old.userID == new.userID {
+            acc.name = new.name ?? old.name
+            acc.email = new.email ?? old.email
+            acc.firstSignIn = old.firstSignIn
+            acc.signInCount = old.signInCount + 1
+        }
+        AccountStore.save(acc)
+        account = acc
+        save.onboarding.signInOffered = true
+        syncWithCloud()
+    }
+
+    func signOut() {
+        AccountStore.clear()
+        account = nil
+    }
+
+    /// 起動時：サインインがまだ有効か確かめる（設定でアプリとの連携を外した場合など）
+    private func checkAccount() {
+        guard AccountConfig.enabled, let id = account?.userID else { return }
+        AppleSignIn.checkStillValid(userID: id) { [weak self] valid in
+            if valid { self?.syncWithCloud() } else { self?.signOut() }
+        }
+    }
+
+    /// iCloud の記録と合わせる：遊んだ局数が多い方を残す（設定はこの端末のまま）
+    func syncWithCloud() {
+        guard CloudSave.enabled, let user = account?.userID else { return }
+        Task {
+            do {
+                if let remote = try await CloudSave.load(user: user), remote.stats.rounds > save.stats.rounds {
+                    var merged = remote
+                    merged.settings = save.settings
+                    merged.onboarding.introDone = true
+                    save = merged
+                } else {
+                    try await CloudSave.store(save, user: user)
+                }
+            } catch {
+                // iCloud に入っていない・電波がないときは、端末の記録だけで続ける
+            }
+        }
+    }
+
+    /// 試合が終わったときなど：iCloud に今の記録を置く
+    func pushToCloud() {
+        guard CloudSave.enabled, let user = account?.userID else { return }
+        let snapshot = save
+        Task { try? await CloudSave.store(snapshot, user: user) }
     }
 
     /// 試合が終わったとき：★を足す（今のランクで遊んだときだけ）
@@ -124,10 +221,16 @@ final class AppModel: ObservableObject {
                 star = r
             }
             refreshReminders()
+            pushToCloud()
             return .daily(DailySummary(won: won, turns: turns, points: state.players[0].score, streak: save.streak.current, star: star))
-        case .tutorial:
-            save.progress.tutorialDone = true
-            return .tutorial
+        case let .tutorial(task):
+            let cleared = task.isCleared(state.history.last)
+            if cleared {
+                if !save.cleared(task) { save.tutorialTasks.append(task.rawValue) }
+                if task == .basics { save.progress.tutorialDone = true }
+                pushToCloud()
+            }
+            return .tutorial(task: task, cleared: cleared)
         case let .cpu(rank):
             save.ads.recordMatchFinished()
             guard rank == save.progress.rank else { return .practice(place: place) }
@@ -135,6 +238,7 @@ final class AppModel: ObservableObject {
             let reward = progress.addStars(Ranks.starsForPlace[place])
             save.progress = progress
             if reward.rankedUp { save.settings.mat = Ranks.all[reward.newRank].mat }
+            pushToCloud()
             return .ranked(place: place, reward: reward)
         }
     }

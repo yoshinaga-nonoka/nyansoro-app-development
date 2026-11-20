@@ -5,6 +5,7 @@ public enum MissionID: String, CaseIterable, Codable, Sendable {
     case firstWin, tsumoWin, noJokerWin, fastWin, matchFirst, streak3
     case allFamilyWin, allSameWin, bigWin, wins10, sharpPlay, beatNora, streak7
     case perfectWin, wins50, beatBoss, beatGod
+    case riichiWin, ippatsuWin, roleWin, oneFamilyWin
 }
 
 public struct MissionDef: Sendable, Identifiable {
@@ -26,16 +27,20 @@ public enum Missions {
         MissionDef(id: .tsumoWin, title: "自分《じぶん》で引《ひ》いて上《あ》がる", detail: "山《やま》から引《ひ》いた猫《ねこ》で揃《そろ》うと +5点《てん》。", badge: "引《ひ》きの強《つよ》い猫《ねこ》", target: 1, tier: 1),
         MissionDef(id: .noJokerWin, title: "招《まね》き猫《ねこ》なしで上《あ》がる", detail: "招《まね》き猫《ねこ》を使《つか》わずに揃《そろ》えると +5点《てん》。便利《べんり》だけど、使《つか》わない方《ほう》が点《てん》は高《たか》い。", badge: "招《まね》き猫《ねこ》いらず", target: 1, tier: 1),
         MissionDef(id: .fastWin, title: "3巡目《じゅんめ》までに上《あ》がる", detail: "配牌《はいぱい》がいいときはチャンス。バラバラの猫《ねこ》から迷《まよ》わず捨《す》てよう。", badge: "早上《はやあ》がり", target: 1, tier: 1),
+        MissionDef(id: .riichiWin, title: "リーチして上《あ》がる", detail: "あと1枚《まい》になったら「リーチ」ボタン。手《て》は変《か》えられなくなるけど、上《あ》がれば +10点《てん》。", badge: "リーチの猫《ねこ》", target: 1, tier: 1),
         MissionDef(id: .matchFirst, title: "試合《しあい》で1位《い》になる", detail: "4局《きょく》の合計《ごうけい》でいちばん。1位《い》は★2つ。", badge: "初優勝《はつゆうしょう》", target: 1, tier: 1),
         MissionDef(id: .streak3, title: "今日《きょう》の1局《きょく》を3日《か》連続《れんぞく》", detail: "毎日《まいにち》1局《きょく》だけでOK。勝《か》てば★1つ。", badge: "三日坊主《みっかぼうず》じゃない", target: 3, tier: 1),
         MissionDef(id: .allFamilyWin, title: "全部《ぜんぶ》家族《かぞく》で上《あ》がる", detail: "3組《くみ》ともパパ・ママ・子猫《こねこ》で揃《そろ》えると +10点《てん》。家族《かぞく》が2組《くみ》できたら、3組目《くみめ》も家族《かぞく》を狙《ねら》おう。", badge: "家族思《かぞくおも》い", target: 1, tier: 2),
         MissionDef(id: .allSameWin, title: "全部《ぜんぶ》同《おな》じ猫《ねこ》で上《あ》がる", detail: "3組《くみ》とも同《おな》じ猫《ねこ》3枚《まい》で揃《そろ》えると +10点《てん》。2枚《まい》ある猫《ねこ》を大事《だいじ》にしよう。", badge: "そっくりさん", target: 1, tier: 2),
-        MissionDef(id: .bigWin, title: "25点《てん》以上《いじょう》で上《あ》がる", detail: "ボーナスを2つ以上《いじょう》重《かさ》ねると25点《てん》。例《れい》：全部《ぜんぶ》家族《かぞく》＋招《まね》き猫《ねこ》なし。", badge: "高得点《こうとくてん》ハンター", target: 1, tier: 2),
+        MissionDef(id: .bigWin, title: "30点《てん》以上《いじょう》で上《あ》がる", detail: "役《やく》を重《かさ》ねよう。例《れい》：リーチ＋全部《ぜんぶ》家族《かぞく》＝30点《てん》。", badge: "高得点《こうとくてん》ハンター", target: 1, tier: 2),
+        MissionDef(id: .ippatsuWin, title: "すぐにゃんで上《あ》がる", detail: "リーチしてから、次《つぎ》に自分《じぶん》が捨《す》てる前《まえ》に上《あ》がると +5点《てん》。待《ま》っている猫《ねこ》が多《おお》い形《かたち》でリーチしよう。", badge: "すぐにゃん名人《めいじん》", target: 1, tier: 2),
+        MissionDef(id: .roleWin, title: "パパ・ママ・子猫《こねこ》そろい", detail: "3組《くみ》とも同《おな》じ役割《やくわり》の猫《ねこ》3枚《まい》（例《れい》：パパ×3が3組《くみ》）で +15点《てん》。", badge: "そろいの達人《たつじん》", target: 1, tier: 2),
         MissionDef(id: .wins10, title: "通算《つうさん》10回《かい》上《あ》がる", detail: "上《あ》がった回数《かいすう》。練習《れんしゅう》も今日《きょう》の1局《きょく》も数《かぞ》える。", badge: "上《あ》がり上手《じょうず》", target: 10, tier: 2),
         MissionDef(id: .sharpPlay, title: "名人《めいじん》の捨《す》て方《かた》", detail: "1試合《しあい》で「ベストな捨《す》て方《かた》」を90%以上《いじょう》（15回《かい》以上《いじょう》捨《す》てた試合《しあい》）。", badge: "名人《めいじん》の目《め》", target: 1, tier: 2),
         MissionDef(id: .beatNora, title: "野良猫《のらねこ》ランクで1位《い》", detail: "残《のこ》りの猫《ねこ》を数《かぞ》える相手《あいて》に勝《か》つ。", badge: "野良猫《のらねこ》の親分《おやぶん》", target: 1, tier: 2),
         MissionDef(id: .streak7, title: "今日《きょう》の1局《きょく》を7日《か》連続《れんぞく》", detail: "1週間《しゅうかん》毎日《まいにち》。1日《にち》休《やす》んでも動画《どうが》で守《まも》れる。", badge: "毎日《まいにち》の猫《ねこ》", target: 7, tier: 2),
-        MissionDef(id: .perfectWin, title: "30点《てん》満点《まんてん》で上《あ》がる", detail: "全部《ぜんぶ》同《おな》じ猫《ねこ》（か全部《ぜんぶ》家族《かぞく》）＋招《まね》き猫《ねこ》なし＋自分《じぶん》で引《ひ》いて上《あ》がり＝30点《てん》。", badge: "満点《まんてん》の猫《ねこ》", target: 1, tier: 3),
+        MissionDef(id: .perfectWin, title: "45点《てん》以上《いじょう》で上《あ》がる", detail: "例《れい》：リーチ＋すぐにゃん＋自分《じぶん》で引《ひ》いて上《あ》がり＋招《まね》き猫《ねこ》なし＋全部《ぜんぶ》家族《かぞく》＝45点《てん》。", badge: "大物《おおもの》の猫《ねこ》", target: 1, tier: 3),
+        MissionDef(id: .oneFamilyWin, title: "ひと家族《かぞく》だらけで上《あ》がる", detail: "9枚《まい》全部《ぜんぶ》を同《おな》じ家族《かぞく》で揃《そろ》えると +20点《てん》。めったに出《で》ない大物《おおもの》。", badge: "大家族《だいかぞく》", target: 1, tier: 3),
         MissionDef(id: .wins50, title: "通算《つうさん》50回《かい》上《あ》がる", detail: "コツコツ上《あ》がり続《つづ》けよう。", badge: "上《あ》がりの達人《たつじん》", target: 50, tier: 3),
         MissionDef(id: .beatBoss, title: "ボス猫《ねこ》ランクで1位《い》", detail: "危《あぶ》ない猫《ねこ》を捨《す》てない相手《あいて》。上《あ》がられると −5点《てん》なので、相手《あいて》の捨《す》てた猫《ねこ》もよく見《み》よう。", badge: "ボス猫《ねこ》に勝《か》った", target: 1, tier: 3),
         MissionDef(id: .beatGod, title: "猫神様《ねこがみさま》に勝《か》つ", detail: "いちばん強《つよ》い相手《あいて》で1位《い》。", badge: "猫神様《ねこがみさま》に勝《か》った", target: 1, tier: 3),
@@ -140,6 +145,10 @@ public enum Coaching {
         if myWins == 0, sleeps >= 1 {
             return "揃《そろ》うのが少《すこ》し遅《おそ》め。2枚《まい》ある組《くみ》と、家族《かぞく》が2匹《ひき》いる組《くみ》を大事《だいじ》にしよう。"
         }
+        let myRiichiWins = state.history.filter { $0.winner == seat && ($0.win?.items.contains(ScoreTable.riichi) ?? false) }.count
+        if myWins >= 1, myRiichiWins == 0 {
+            return "あと1枚《まい》になったら「リーチ」してみよう。上《あ》がったときに +10点《てん》もらえるよ。"
+        }
         if tally.total > 0, tally.accuracy >= 0.9 {
             return "判断《はんだん》はばっちり！ 次《つぎ》は点《てん》の高《たか》い上《あ》がりを狙《ねら》おう（全部《ぜんぶ》家族《かぞく》＋招《まね》き猫《ねこ》なしで +15点《てん》）。"
         }
@@ -147,15 +156,15 @@ public enum Coaching {
     }
 
     /// 8枚の手で「あと1枚」のとき、上がったら何点になるか（最小・最大）
-    public static func waitPoints(hand8: [Tile]) -> (min: Int, max: Int)? {
+    public static func waitPoints(hand8: [Tile], riichi: Bool = false) -> (min: Int, max: Int)? {
         let counts = countKinds(hand8)
         let waits = waitingKinds(counts)
         guard !waits.isEmpty else { return nil }
         var lo = Int.max, hi = 0
         for k in waits {
             let hand = hand8 + [Tile(id: -1, kind: k)]
-            if let ron = scoreWin(hand, tsumo: false) { lo = min(lo, ron.total) }
-            if let tsumo = scoreWin(hand, tsumo: true) { hi = max(hi, tsumo.total) }
+            if let ron = scoreWin(hand, WinContext(tsumo: false, riichi: riichi)) { lo = min(lo, ron.total) }
+            if let tsumo = scoreWin(hand, WinContext(tsumo: true, riichi: riichi, ippatsu: riichi)) { hi = max(hi, tsumo.total) }
         }
         return lo == Int.max ? nil : (lo, hi)
     }
@@ -183,8 +192,12 @@ public enum MissionTracker {
         add(.allFamilyWin, win.items.contains(ScoreTable.allFamily))
         add(.allSameWin, win.items.contains(ScoreTable.allSame))
         add(.fastWin, turns > 0 && turns <= 3)
-        add(.bigWin, win.total >= 25)
-        add(.perfectWin, win.total >= 30)
+        add(.riichiWin, win.items.contains(ScoreTable.riichi))
+        add(.ippatsuWin, win.items.contains(ScoreTable.ippatsu))
+        add(.roleWin, win.items.contains { ScoreTable.roleItems.contains($0) })
+        add(.oneFamilyWin, win.items.contains(ScoreTable.oneFamily))
+        add(.bigWin, win.total >= 30)
+        add(.perfectWin, win.total >= 45)
         return done
     }
 

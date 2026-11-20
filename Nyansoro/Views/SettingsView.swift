@@ -1,5 +1,6 @@
-// 設定：ヒント・ふりがな・自動でにゃん！・音・振動・CPUの速さ・マット・データの消去
+// 設定：ヒント・ふりがな・自動でにゃん！・音・振動・CPUの速さ・マット・アカウント・データの消去
 
+import AuthenticationServices
 import SwiftUI
 
 struct SettingsView: View {
@@ -56,6 +57,11 @@ struct SettingsView: View {
                 PrivacyLinkRow(title: "広告《こうこく》とプライバシー", note: "年齢《ねんれい》・追跡《ついせき》の許可《きょか》・プライバシーポリシー") { AdPrivacy.shared.showSettings = true }
                     .padding(.top, 8)
 
+                if allowReset && AccountConfig.enabled {
+                    accountArea
+                        .padding(.top, 12)
+                }
+
                 if allowReset {
                     resetArea
                         .padding(.top, 12)
@@ -69,6 +75,39 @@ struct SettingsView: View {
         .sheet(isPresented: $privacy.showSettings) {
             PrivacySettingsView()
                 .environment(\.furigana, app.settings.furigana)
+        }
+    }
+
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var signInFailed = false
+
+    /// Apple でサインイン（有料登録のあと AccountConfig.signInEnabled を true にすると出る）
+    private var accountArea: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            RubyText("アカウント", size: 15, bold: true)
+            if let acc = app.account {
+                RubyText("Apple でサインイン中《ちゅう》\(acc.name.map { "：\($0)" } ?? "")", size: 14)
+                RubyText(CloudSave.enabled ? "記録《きろく》は iCloud にも保存《ほぞん》されるよ。" : "記録《きろく》はこの端末《たんまつ》に保存《ほぞん》されるよ。", size: 12, color: Palette.inkSoft)
+                Button { app.signOut() } label: {
+                    RubyText("サインアウト", size: 15, display: true)
+                }
+                .buttonStyle(PillButtonStyle(kind: .ghost))
+            } else {
+                RubyText("サインインすると、記録《きろく》がアカウントに貯《た》まっていく。しなくても全部《ぜんぶ》遊《あそ》べるよ。", size: 12, color: Palette.inkSoft)
+                SignInWithAppleButton(.signIn) { request in
+                    request.requestedScopes = [.fullName, .email]
+                } onCompletion: { result in
+                    let r = AppleSignIn.account(from: result)
+                    if let acc = r.account { app.signedIn(acc) }
+                    signInFailed = r.failed
+                }
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                .frame(height: 46)
+                .frame(maxWidth: 380)
+                if signInFailed {
+                    RubyText("サインインできなかったよ。時間《じかん》をおいて試《ため》してね。", size: 12, color: Palette.bad)
+                }
+            }
         }
     }
 

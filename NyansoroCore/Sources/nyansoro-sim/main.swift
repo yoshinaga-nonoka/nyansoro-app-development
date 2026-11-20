@@ -1,6 +1,7 @@
 // CPUの強さのバランス確認：主人公CPU 1人 vs 相手CPU 3人で4局の試合をくり返し、1位になる割合を出す。
 // 使い方: swift run -c release nyansoro-sim [試合数] [主人公レベル,...] [ランク番号,...]
 
+import Foundation
 import NyansoroCore
 
 let args = CommandLine.arguments
@@ -22,7 +23,7 @@ func playMatch(hero: Int, rank: RankDef, seed: UInt32) -> (place: Int, turns: In
         case .draw: a = .draw
         case .discard:
             let p = s.players[s.current]
-            a = canWin(p.hand) ? .tsumo : .discard(tileId: chooseDiscard(s, s.current, level: p.level, rand: { r.nextUnit() }))
+            a = chooseAction(s, s.current, level: p.level, rand: { r.nextUnit() })
         case .claim: a = .ron(player: s.claimQueue[0])
         default:
             turns += s.turn
@@ -35,14 +36,20 @@ func playMatch(hero: Int, rank: RankDef, seed: UInt32) -> (place: Int, turns: In
 }
 
 print("各 \(n) 試合（4局）／ 数字 = 主人公CPUが1位になった割合（運だけなら25%）")
+var allTurns = 0, allRounds = 0, allExhausted = 0
 for h in heroes {
     var row = "Lv\(h)  "
     for (ri, rank) in Ranks.all.enumerated() where rankFilter.contains(ri) {
         var first = 0
-        for i in 0..<n where playMatch(hero: h, rank: rank, seed: UInt32(10_000 * h + 100 * ri + i + 1)).place == 0 {
-            first += 1
+        for i in 0..<n {
+            let m = playMatch(hero: h, rank: rank, seed: UInt32(10_000 * h + 100 * ri + i + 1))
+            if m.place == 0 { first += 1 }
+            allTurns += m.turns
+            allRounds += 4
+            allExhausted += m.exhausted
         }
         row += "\(plainText(rank.name)) \(first * 100 / n)%  "
     }
     print(row)
 }
+print("1局の長さ（全員の引いた回数の平均）: \(String(format: "%.1f", Double(allTurns) / Double(max(1, allRounds))))回 ／ お昼寝（流局）: \(allExhausted * 100 / max(1, allRounds))%")

@@ -4,7 +4,7 @@ import SwiftUI
 
 struct HelpView: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case now, win, sets, cats, turn, score, marks, rank, mastery
+        case now, win, sets, cats, turn, riichi, score, yaku, marks, rank, mastery
         var id: String { rawValue }
 
         var label: String {
@@ -14,7 +14,9 @@ struct HelpView: View {
             case .sets: return "セット"
             case .cats: return "猫《ねこ》"
             case .turn: return "順番《じゅんばん》"
+            case .riichi: return "リーチ"
             case .score: return "点数《てんすう》"
+            case .yaku: return "役《やく》"
             case .marks: return "マーク"
             case .rank: return "ランク"
             case .mastery: return "上達《じょうたつ》のコツ"
@@ -24,16 +26,20 @@ struct HelpView: View {
 
     let game: GameState?
     var recommendOn = true
+    /// 初回の説明をもう一度見る（タイトルから開いたときだけ）
+    var onReplayIntro: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var tab: Tab
 
-    init(game: GameState?, recommendOn: Bool = true) {
+    init(game: GameState?, recommendOn: Bool = true, onReplayIntro: (() -> Void)? = nil) {
         self.game = game
         self.recommendOn = recommendOn
+        self.onReplayIntro = onReplayIntro
         let inGame = game.map { $0.phase != .matchEnd } ?? false
         var first: Tab = inGame ? .now : .win
         #if DEBUG
         if DebugScenario.current == .helpCats { first = .cats }
+        if DebugScenario.current == .helpYaku { first = .yaku }
         #endif
         _tab = State(initialValue: first)
     }
@@ -99,7 +105,17 @@ struct HelpView: View {
                 example([kindOf(1, 0), kindOf(1, 1), kindOf(1, 2)], "セット2").padding(.trailing, 14)
                 example([kindOf(2, 2), kindOf(2, 2), joker], "セット3")
             }
-            RubyText("手持《ても》ちは8枚《まい》。自分《じぶん》の番《ばん》に1枚《まい》引《ひ》いて9枚《まい》になったとき、または他《ほか》の人《ひと》が捨《す》てた猫《ねこ》で9枚《まい》が揃《そろ》ったら、**にゃん！**ボタンを押《お》そう。")
+            RubyText("**4人《にん》**で遊《あそ》んで、いちばん早《はや》く揃《そろ》えた人《ひと》がその局《きょく》の勝《か》ち。手持《ても》ちは8枚《まい》。自分《じぶん》の番《ばん》に1枚《まい》引《ひ》いて9枚《まい》になったとき、または他《ほか》の人《ひと》が捨《す》てた猫《ねこ》で9枚《まい》が揃《そろ》ったら、**にゃん！**ボタンを押《お》そう。")
+            if let onReplayIntro {
+                Button(action: onReplayIntro) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "book")
+                        RubyText("はじめの説明《せつめい》をもう一度《いちど》見《み》る", size: 15, display: true)
+                    }
+                }
+                .buttonStyle(PillButtonStyle(kind: .ghost))
+                .padding(.top, 8)
+            }
         case .sets:
             section("① 同《おな》じ猫《ねこ》")
             RubyText("まったく同《おな》じ猫《ねこ》を3枚《まい》。")
@@ -143,8 +159,47 @@ struct HelpView: View {
             step(1, "**引《ひ》く：**自分《じぶん》の番《ばん》になると、山《やま》から1枚《まい》引《ひ》くよ（自動《じどう》）。")
             step(2, "**捨《す》てる：**いらない猫《ねこ》をタップして選《えら》び、もう一度《いちど》タップ（または「捨《す》てる」ボタン）で捨《す》てる。")
             step(3, "**にゃん！：**他《ほか》の人《ひと》が捨《す》てた猫《ねこ》で揃《そろ》うときも、にゃん！で勝《か》ち。")
-            step(4, "**お昼寝《ひるね》：**山《やま》がなくなったら引《ひ》き分《わ》け。")
-            step(5, "1試合《しあい》は**4局《きょく》**。最後《さいご》に点数《てんすう》が一番《いちばん》多《おお》い人《ひと》が1位《い》！")
+            step(4, "**リーチ：**あと1枚《まい》で揃《そろ》う形《かたち》になったら、捨《す》てる猫《ねこ》を選《えら》んで「リーチ」ボタン（言《い》わなくてもOK）。")
+            step(5, "**お昼寝《ひるね》：**山《やま》がなくなったら引《ひ》き分《わ》け。")
+            step(6, "1試合《しあい》は**4局《きょく》**。最後《さいご》に点数《てんすう》が一番《いちばん》多《おお》い人《ひと》が1位《い》！")
+        case .riichi:
+            HStack(spacing: 8) {
+                RiichiChip()
+                RubyText("あと1枚《まい》で揃《そろ》うときに言《い》える", size: 17, bold: true)
+            }
+            step(1, "捨《す》てる猫《ねこ》を選《えら》ぶと、捨《す》てたら「あと1枚《まい》」になるときだけ**リーチ**ボタンが出《で》る。")
+            step(2, "リーチすると、手《て》は変《か》えられない。引《ひ》いた猫《ねこ》がそのまま捨《す》てられる（自動《じどう》）。")
+            step(3, "待《ま》っている猫《ねこ》で上《あ》がると **+10点《てん》**。人《ひと》が捨《す》てた猫《ねこ》でも、自分《じぶん》で引《ひ》いてもOK。")
+            step(4, "リーチしてから、次《つぎ》に自分《じぶん》が捨《す》てる前《まえ》に上《あ》がると「**すぐにゃん**」でさらに +5点《てん》。")
+            RubyText("リーチしなくても上《あ》がれるよ。もっといい形《かたち》を待《ま》ちたいときは、言《い》わずに続《つづ》けるのも作戦《さくせん》。相手《あいて》がリーチしたら、その人《ひと》はあと1枚《まい》。捨《す》てる猫《ねこ》に気《き》をつけよう。", size: 14, color: Palette.inkSoft)
+        case .yaku:
+            RubyText("役《やく》は、点数《てんすう》が増《ふ》える上《あ》がり方《かた》・揃《そろ》え方《かた》。いくつでも重《かさ》なるよ。", size: 15)
+            ForEach(ScoreTable.rules) { rule in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        RubyText(rule.item.label, size: 16, bold: true)
+                        Spacer(minLength: 0)
+                        Text("+\(rule.item.points)")
+                            .font(AppFont.body(15, bold: true))
+                            .foregroundColor(Palette.goldInk)
+                    }
+                    RubyText(rule.detail, size: 13, color: Palette.inkSoft)
+                    if !rule.example.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(0..<3, id: \.self) { g in
+                                HStack(spacing: 1) {
+                                    ForEach(0..<3, id: \.self) { j in
+                                        TileView(kind: rule.example[g * 3 + j], width: 26)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Palette.surface2))
+            }
         case .score:
             VStack(spacing: 6) {
                 ForEach(ScoreTable.all, id: \.self) { item in
@@ -158,7 +213,7 @@ struct HelpView: View {
                 }
             }
             .frame(maxWidth: 340)
-            RubyText("上《あ》がった人《ひと》だけが点数《てんすう》をもらえる。他《ほか》の人《ひと》の点数《てんすう》は減《へ》らないよ。")
+            RubyText("上《あ》がった人《ひと》だけが点数《てんすう》をもらえる。他《ほか》の人《ひと》の点数《てんすう》は減《へ》らないよ。それぞれの役《やく》は「役《やく》」のページで。")
             RubyText("ボス猫《ねこ》ランクから：上《あ》がられる猫《ねこ》を捨《す》てた人《ひと》は −5点《てん》。", size: 13, color: Palette.inkSoft)
         case .marks:
             markRow({
@@ -178,6 +233,7 @@ struct HelpView: View {
                     .frame(width: 60, height: 5)
             }, "点線《てんせん》：あと少《すこ》しで揃《そろ》うセット。")
             markRow({ StatusPill(dist: 1, win: false) }, "あと何枚《なんまい》で揃《そろ》うか。「待《ま》っている猫《ねこ》」が出《で》たら勝《か》ち。")
+            markRow({ RiichiChip() }, "リーチ中《ちゅう》の人《ひと》。あと1枚《まい》で揃《そろ》う。")
         case .mastery:
             LessonPointsPage()
             LessonTipsPage()
