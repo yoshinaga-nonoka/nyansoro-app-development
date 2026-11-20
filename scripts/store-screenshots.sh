@@ -67,7 +67,7 @@ shoot() {
 PHONE=$(pick "iPhone 17 Pro Max" "iPhone 16 Pro Max")
 echo "== iPhone 6.9インチ"
 start "$PHONE"
-shoot "$PHONE" store/iphone-69 title game riichi round-result rankup help-yaku lesson missions daily-result
+shoot "$PHONE" store/iphone-69 title game riichi round-result rankup help-yaku lesson missions
 xcrun simctl shutdown "$PHONE" || true
 
 PAD=$(pick "iPad Pro 13-inch (M5)" "iPad Pro 13-inch (M4)")
