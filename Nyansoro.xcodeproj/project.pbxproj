@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000013 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000012 /* GoogleMobileAds */; };
+		A10000000000000000000016 /* UserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000015 /* UserMessagingPlatform */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000013 /* GoogleMobileAds in Frameworks */,
+				A10000000000000000000016 /* UserMessagingPlatform in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +81,7 @@
 			name = Nyansoro;
 			packageProductDependencies = (
 				A10000000000000000000012 /* GoogleMobileAds */,
+				A10000000000000000000015 /* UserMessagingPlatform */,
 			);
 			productName = Nyansoro;
 			productReference = A10000000000000000000001 /* Nyansoro.app */;
@@ -110,6 +113,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A10000000000000000000011 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				A10000000000000000000014 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000000000000000000006 /* Products */;
@@ -284,7 +288,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.nyansoro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonoka.nyansoro;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -315,7 +319,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.nyansoro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonoka.nyansoro;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -355,6 +359,14 @@
 				minimumVersion = 13.0.0;
 			};
 		};
+		A10000000000000000000014 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -362,6 +374,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000011 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		A10000000000000000000015 /* UserMessagingPlatform */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000014 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */;
+			productName = GoogleUserMessagingPlatform;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -4,7 +4,7 @@
 # を実行すると、この設定から Nyansoro.xcodeproj を作り直せます。
 name: Nyansoro
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.nonoka
   deploymentTarget:
     iOS: "16.0"
   developmentLanguage: ja
@@ -21,7 +21,7 @@ targets:
         group: NyansoroCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.nyansoro
+        PRODUCT_BUNDLE_IDENTIFIER: com.nonoka.nyansoro
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: にゃんそろ
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.board-games

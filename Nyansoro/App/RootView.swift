@@ -36,6 +36,7 @@ struct RootView: View {
             }
 
             DebugAdOverlay(ads: app.debugAds)
+            PrivacyGate()  // 初回の年齢確認と広告の準備（Privacy/）
         }
         .environment(\.furigana, app.settings.furigana)
         .sheet(isPresented: $app.showHelp) {
