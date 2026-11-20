@@ -80,4 +80,4 @@ Google による情報の取り扱いは、次をご覧ください。
 本アプリの情報の取り扱いについてのお問い合わせは、次までご連絡ください。
 
 - 開発者：Yoshi.App
-- メールアドレス：yoshi.app.contact@gmail.com
+- メールアドレス：yoshi.app.contact+nyansoro@gmail.com

@@ -10,7 +10,7 @@ import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "build", "site")
-CONTACT_EMAIL = "yoshi.app.contact@gmail.com"
+CONTACT_EMAIL = "yoshi.app.contact+nyansoro@gmail.com"
 CONTACT_FORM_URL = ""  # 例: https://forms.gle/xxxxxxxx
 
 CSS = """
@@ -54,7 +54,8 @@ def inline(text):
     t = html.escape(text)
     t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
     t = re.sub(r"(https?://[^\s<、）)]+)", r'<a href="\1">\1</a>', t)
-    return re.sub(r"([\w.+-]+@[\w-]+\.[\w.]+)", r'<a href="mailto:\1">\1</a>', t)
+    # メールアドレスはリンクに（「+」はメールアプリで空白と読まれないよう %2B にする）
+    return re.sub(r"([\w.+-]+@[\w-]+\.[\w.]+)", lambda m: f'<a href="mailto:{m.group(1).replace("+", "%2B")}">{m.group(1)}</a>', t)
 
 
 def markdown_to_html(md):
@@ -117,7 +118,7 @@ def main():
     else:
         mail = html.escape(CONTACT_EMAIL)
         contact = (f'<div class="card"><p>「にゃんそろ」についてのお問い合わせは、次のメールアドレスまでお送りください。</p>'
-                   f'<p><a href="mailto:{mail}?subject=にゃんそろ お問い合わせ">{mail}</a></p>'
+                   f'<p><a href="mailto:{mail.replace("+", "%2B")}?subject=にゃんそろ お問い合わせ">{mail}</a></p>'
                    '<p>お返事までお時間をいただくことがあります。</p></div>')
     write("contact.html", page("にゃんそろ お問い合わせ", "<h1>お問い合わせ</h1>\n" + contact))
     shutil.copy(os.path.join(ROOT, "docs", "app-ads.txt"), os.path.join(OUT, "app-ads.txt"))
