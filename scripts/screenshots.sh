@@ -34,6 +34,10 @@ start() {
   xcrun simctl bootstatus "$U" -b > /dev/null
   xcrun simctl status_bar "$U" override --time 9:41 --batteryLevel 100 --batteryState charged 2>/dev/null || true
   xcrun simctl install "$U" "$APP"
+  # 入れた直後の1回目の起動は遅く、最初の1枚が真っ白になることがあるので、一度起動して慣らしておく
+  xcrun simctl launch "$U" "$BID" -scenario title > /dev/null
+  sleep 12
+  xcrun simctl terminate "$U" "$BID" > /dev/null 2>&1 || true
 }
 
 shoot() {
