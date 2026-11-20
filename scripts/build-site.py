@@ -2,7 +2,7 @@
 # 公開用サイト（Cloudflare Pages）を build/site/ に作る。
 #   python3 scripts/build-site.py
 # docs/privacy-policy.md → privacy-policy.html、docs/app-ads.txt はサイトのいちばん上に置く。
-# お問い合わせフォームの URL が決まったら CONTACT_FORM_URL に入れる（/contact から転送）。
+# お問い合わせはメール（CONTACT_EMAIL）。フォームを使うときは CONTACT_FORM_URL に入れると /contact から転送する。
 import html
 import os
 import re
@@ -10,6 +10,7 @@ import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "build", "site")
+CONTACT_EMAIL = "yoshi.app.contact@gmail.com"
 CONTACT_FORM_URL = ""  # 例: https://forms.gle/xxxxxxxx
 
 CSS = """
@@ -52,7 +53,8 @@ def page(title, body):
 def inline(text):
     t = html.escape(text)
     t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
-    return re.sub(r"(https?://[^\s<、）)]+)", r'<a href="\1">\1</a>', t)
+    t = re.sub(r"(https?://[^\s<、）)]+)", r'<a href="\1">\1</a>', t)
+    return re.sub(r"([\w.+-]+@[\w-]+\.[\w.]+)", r'<a href="mailto:\1">\1</a>', t)
 
 
 def markdown_to_html(md):
@@ -113,7 +115,10 @@ def main():
     if CONTACT_FORM_URL:
         contact = f'<p>お問い合わせは <a href="{html.escape(CONTACT_FORM_URL)}">お問い合わせフォーム</a> からお送りください。</p>'
     else:
-        contact = "<p>お問い合わせフォームは準備中です。もうしばらくお待ちください。</p>"
+        mail = html.escape(CONTACT_EMAIL)
+        contact = (f'<div class="card"><p>「にゃんそろ」についてのお問い合わせは、次のメールアドレスまでお送りください。</p>'
+                   f'<p><a href="mailto:{mail}?subject=にゃんそろ お問い合わせ">{mail}</a></p>'
+                   '<p>お返事までお時間をいただくことがあります。</p></div>')
     write("contact.html", page("にゃんそろ お問い合わせ", "<h1>お問い合わせ</h1>\n" + contact))
     shutil.copy(os.path.join(ROOT, "docs", "app-ads.txt"), os.path.join(OUT, "app-ads.txt"))
     redirects = "/privacy /privacy-policy 301\n"
