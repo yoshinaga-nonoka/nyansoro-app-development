@@ -110,7 +110,7 @@ def main():
     write("index.html", page("にゃんそろ", """<h1>にゃんそろ</h1>
 <div class="card">
 <p>猫の絵柄を3枚ずつそろえる、かんたんな麻雀風ゲームです（iPhone / iPad）。</p>
-<p>開発者：Yoshinaga</p>
+<p>開発者：Yoshi.App</p>
 </div>"""))
     if CONTACT_FORM_URL:
         contact = f'<p>お問い合わせは <a href="{html.escape(CONTACT_FORM_URL)}">お問い合わせフォーム</a> からお送りください。</p>'
