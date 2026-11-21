@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 60
     env:
       # Apple Developer の Team ID（秘密ではない。プロジェクトの DEVELOPMENT_TEAM と同じ）
-      APPLE_TEAM_ID: PXZHN947JG
+      APPLE_TEAM_ID: G5C48HHDMM
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       # ビルド番号は実行ごとに1つずつ上がる（App Store Connect は同じ番号を2回受け付けない）
