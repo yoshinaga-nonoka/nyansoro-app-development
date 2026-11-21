@@ -44,7 +44,7 @@ jobs:
             [ -n "${!v}" ] || missing="$missing $v"
           done
           if [ -n "$missing" ]; then
-            echo "::error::Secrets が足りません:$missing（Settings → Secrets and variables → Actions で登録）"
+            echo "::error::Secrets が足りません:${missing}（Settings → Secrets and variables → Actions で登録）"
             exit 1
           fi
 
@@ -91,7 +91,7 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
             -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tee export.log
-          echo "### アップロードしました：バージョン 1.0（ビルド $BUILD_NUMBER）" >> "$GITHUB_STEP_SUMMARY"
+          echo "### アップロードしました：バージョン 1.0（ビルド ${BUILD_NUMBER}）" >> "$GITHUB_STEP_SUMMARY"
           echo "15〜30分ほどで App Store Connect の TestFlight に出ます。" >> "$GITHUB_STEP_SUMMARY"
 
       - name: ログを残す（失敗したとき）
