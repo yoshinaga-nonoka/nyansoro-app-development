@@ -1,0 +1,23 @@
+# TestFlight の内部テストを用意する：グループ「開発チーム」を作り（全部のビルドが自動で届く）、
+# チームのユーザーをテスターにする。Mac は使わない。
+# 動かし方：GitHub の「Actions」→「TestFlight testers」→「Run workflow」
+name: TestFlight testers
+
+on:
+  workflow_dispatch:
+
+jobs:
+  testers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: 道具を入れる
+        run: pip install --quiet "pyjwt[crypto]"
+      - name: 内部テストのグループとテスター
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          BUNDLE_ID: com.nonoka.nyansoro
+        run: python3 scripts/asc_testers.py
