@@ -7,3 +7,4 @@ shots/
 build/
 build.log
 devices.json
+__pycache__/
