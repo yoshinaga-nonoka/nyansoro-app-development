@@ -28,6 +28,26 @@
 5. 終わると Organizer が開く →「Distribute App」→「App Store Connect」→「Upload」
 6. 15〜30分ほどで App Store Connect の「TestFlight」にビルドが出る
 
+### Mac を使わずに上げる（GitHub Actions）
+`.github/workflows/testflight.yml` が、GitHub の Mac でアーカイブ・署名・アップロードまで行う。
+最初に1回だけ準備する：
+
+1. **API キーを作る**：App Store Connect →「ユーザとアクセス」→「統合」→「App Store Connect API」→「チームキー」→「＋」
+   - 名前：GitHub Actions、アクセス：**Admin**
+   - 「API キーをダウンロード」で `AuthKey_XXXXXXXXXX.p8` を保存（**1回しかダウンロードできない**）
+   - 同じ画面の「Issuer ID」と、キーの「キー ID」を控える
+2. **Team ID を調べる**：developer.apple.com →「アカウント」→「メンバーシップの詳細」→「チーム ID」（10文字）
+3. **GitHub に登録**：リポジトリの「Settings」→「Secrets and variables」→「Actions」→「New repository secret」で4つ
+   | 名前 | 値 |
+   |---|---|
+   | `APPLE_TEAM_ID` | チーム ID |
+   | `ASC_KEY_ID` | キー ID |
+   | `ASC_ISSUER_ID` | Issuer ID |
+   | `ASC_KEY_P8` | .p8 ファイルをテキストエディタで開いた中身全部（BEGIN〜END の行も含む） |
+   ※ キーの中身はチャットには貼らない。GitHub の Secrets にだけ入れる。
+
+上げるとき：「Actions」→「TestFlight」→「Run workflow」。ビルド番号は実行ごとに自動で上がる。
+
 ### ⚠️ TestFlight で試すとき
 TestFlight のビルドは Release なので **本物の広告** が出る。
 **自分で広告をタップしない**こと（AdMob の規約違反で、アカウントが止められることがある）。
