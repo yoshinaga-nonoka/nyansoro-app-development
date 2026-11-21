@@ -1,8 +1,7 @@
 # TestFlight に上げる（Mac がなくても、GitHub の Mac でビルド・署名・アップロードまで行う）
 # 動かし方：GitHub の「Actions」→「TestFlight」→「Run workflow」
 #
-# 先にリポジトリの Settings → Secrets and variables → Actions に、次の4つを登録しておく：
-#   APPLE_TEAM_ID   … Apple Developer の「メンバーシップ」にある Team ID（10文字）
+# 先にリポジトリの Settings → Secrets and variables → Actions に、次の3つを登録しておく（Team ID はプロジェクトに書いてある）：
 #   ASC_KEY_ID      … App Store Connect API キーの「キー ID」
 #   ASC_ISSUER_ID   … App Store Connect API の「Issuer ID」
 #   ASC_KEY_P8      … ダウンロードした AuthKey_XXXX.p8 の中身（-----BEGIN から END まで全部）
@@ -20,7 +19,8 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     env:
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # Apple Developer の Team ID（秘密ではない。プロジェクトの DEVELOPMENT_TEAM と同じ）
+      APPLE_TEAM_ID: PXZHN947JG
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       # ビルド番号は実行ごとに1つずつ上がる（App Store Connect は同じ番号を2回受け付けない）
@@ -40,7 +40,7 @@ jobs:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
           missing=""
-          for v in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
             [ -n "${!v}" ] || missing="$missing $v"
           done
           if [ -n "$missing" ]; then

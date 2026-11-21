@@ -22,7 +22,7 @@
 ## 1. Mac でやること：アップロード
 
 1. `main`（release-1.0 を取り込んだあと）を pull して Xcode で開く
-2. ターゲット Nyansoro →「Signing & Capabilities」→ Team に自分の有料アカウント（Apple Developer Program）を選ぶ
+2. ターゲット Nyansoro →「Signing & Capabilities」で Team が自分のチーム（PXZHN947JG）になっているか確かめる
 3. 上の端末の選択を「Any iOS Device (arm64)」にする
 4. メニュー「Product」→「Archive」
 5. 終わると Organizer が開く →「Distribute App」→「App Store Connect」→「Upload」
@@ -36,11 +36,10 @@
    - 名前：GitHub Actions、アクセス：**Admin**
    - 「API キーをダウンロード」で `AuthKey_XXXXXXXXXX.p8` を保存（**1回しかダウンロードできない**）
    - 同じ画面の「Issuer ID」と、キーの「キー ID」を控える
-2. **Team ID を調べる**：developer.apple.com →「アカウント」→「メンバーシップの詳細」→「チーム ID」（10文字）
-3. **GitHub に登録**：リポジトリの「Settings」→「Secrets and variables」→「Actions」→「New repository secret」で4つ
+2. Team ID（PXZHN947JG）はプロジェクトとワークフローに書き込み済み
+3. **GitHub に登録**：リポジトリの「Settings」→「Secrets and variables」→「Actions」→「New repository secret」で3つ
    | 名前 | 値 |
    |---|---|
-   | `APPLE_TEAM_ID` | チーム ID |
    | `ASC_KEY_ID` | キー ID |
    | `ASC_ISSUER_ID` | Issuer ID |
    | `ASC_KEY_P8` | .p8 ファイルをテキストエディタで開いた中身全部（BEGIN〜END の行も含む） |
